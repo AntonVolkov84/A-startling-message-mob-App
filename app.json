@@ -2,7 +2,7 @@
   "expo": {
     "name": "astartlingmessage",
     "slug": "astartlingmessage",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,13 +16,30 @@
       "supportsTablet": true
     },
     "android": {
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.ant_volkov.astartlingmessage"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "371ddcf4-bdfe-4970-9359-efc9429f1512"
+      }
+    },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      [
+        "expo-font",
+        {
+          "fonts": ["./assets/fonts/Playwrite.ttf", "./assets/fonts/Pacifico.ttf"]
+        }
+      ]
+    ]
   }
 }

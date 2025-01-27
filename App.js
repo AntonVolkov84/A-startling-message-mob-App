@@ -1,20 +1,73 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from "expo-status-bar";
+import { StyleSheet, Text, View } from "react-native";
+import styled from "styled-components";
+import LoginScreen from "./screens/LoginScreen";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import * as NavigationBar from "expo-navigation-bar";
+import { useEffect, useState } from "react";
+import RegistrationScreen from "./screens/RegistrationScreen";
+import DashBoardScreen from "./screens/DashBoardScreen";
+import auth from "@react-native-firebase/auth";
 
+const Stack = createNativeStackNavigator();
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+  const [user, setUser] = useState("");
+  useEffect(() => {
+    customNavigationBar();
+  });
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+  const onAuthStateChanged = (user) => {
+    if (user) {
+      setUser(user);
+    } else {
+      setUser("");
+    }
+  };
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    return subscriber;
+  }, []);
+  const customNavigationBar = async () => {
+    await NavigationBar.setBackgroundColorAsync("#1E2322");
+    await NavigationBar.setButtonStyleAsync("light");
+  };
+  if (!user) {
+    return (
+      <NavigationContainer>
+        <StatusBar style="light" />
+        <Stack.Navigator initialRouteName="Login">
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="Registration"
+            component={RegistrationScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  } else {
+    return (
+      <NavigationContainer>
+        <StatusBar style="light" />
+        <Stack.Navigator initialRouteName="Dashboard">
+          <Stack.Screen
+            name="Dashboard"
+            component={DashBoardScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  }
+}
