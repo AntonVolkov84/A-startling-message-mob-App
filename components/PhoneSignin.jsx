@@ -189,7 +189,7 @@ export default function PhoneSignin({ navigation }) {
         }}
       />
       <BtnGoBack>
-        <BtnGoBackText onPress={() => navigation.navigate("Login")}>Go back</BtnGoBackText>
+        <BtnGoBackText onPress={() => navigation.navigate("Registration")}>Go back</BtnGoBackText>
       </BtnGoBack>
     </PhoneSignIn>
   );

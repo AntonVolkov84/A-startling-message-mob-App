@@ -30,7 +30,9 @@ const BtnPhoneSignIn = styled.TouchableOpacity`
   border-radius: 10px;
 `;
 const BtnPhoneSignInText = styled.Text`
-  color: whitesmoke;
+  color: ${colors.RegistrationScreenBtnText};
+  font-family: "Pacifico";
+  font-size: 22px;
 `;
 const BtnEmailSignIn = styled.TouchableOpacity`
   background-color: ${colors.RegistrationScreenBtnSignInBackground};
@@ -41,8 +43,9 @@ const BtnEmailSignIn = styled.TouchableOpacity`
   border-radius: 10px;
 `;
 const BtnEmailSignInText = styled.Text`
-  color: whitesmoke;
+  color: ${colors.RegistrationScreenBtnText};
   font-family: "Pacifico";
+  font-size: 22px;
 `;
 export default function RegistrationScreen({ navigation }) {
   const [modalPhoneSignIn, setModalPhoneSignIn] = useState(false);

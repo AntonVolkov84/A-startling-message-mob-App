@@ -9,24 +9,38 @@ import { useEffect, useState } from "react";
 import RegistrationScreen from "./screens/RegistrationScreen";
 import DashBoardScreen from "./screens/DashBoardScreen";
 import auth from "@react-native-firebase/auth";
+import { app } from "./firebaseConfig";
+import { getAuth, onAuthStateChanged as onFirebaseAuthStateChanged } from "firebase/auth";
 
 const Stack = createNativeStackNavigator();
+
 export default function App() {
   const [user, setUser] = useState("");
+  const [authInfo, setAuthInfo] = useState({ provider: "none", user: null });
   useEffect(() => {
     customNavigationBar();
   });
 
-  const onAuthStateChanged = (user) => {
-    if (user) {
-      setUser(user);
-    } else {
-      setUser("");
-    }
-  };
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    return subscriber;
+    const firebaseAuth = getAuth();
+    const unsubscribeFirebaseAuth = onFirebaseAuthStateChanged(firebaseAuth, (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(firebaseUser);
+      } else {
+        setUser(null);
+      }
+    });
+    const unsubscribeReactNativeFirebaseAuth = auth().onAuthStateChanged((reactNativeFirebaseUser) => {
+      if (reactNativeFirebaseUser) {
+        setUser(reactNativeFirebaseUser);
+      } else {
+        setUser(null);
+      }
+    });
+    return () => {
+      unsubscribeFirebaseAuth();
+      unsubscribeReactNativeFirebaseAuth();
+    };
   }, []);
   const customNavigationBar = async () => {
     await NavigationBar.setBackgroundColorAsync("#1E2322");
@@ -36,7 +50,7 @@ export default function App() {
     return (
       <NavigationContainer>
         <StatusBar style="light" />
-        <Stack.Navigator initialRouteName="Login">
+        <Stack.Navigator initialRouteName="Registration">
           <Stack.Screen
             name="Login"
             component={LoginScreen}

@@ -1,8 +1,8 @@
-import { View, Text } from "react-native";
-import React from "react";
+import { View, Text, Alert } from "react-native";
+import React, { useState } from "react";
 import styled from "styled-components";
-import auth from "@react-native-firebase/auth";
 import * as colors from "../variables/colors";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 
 const EmailSign = styled.View`
   width: 100%;
@@ -36,7 +36,6 @@ const EmailSignBtn = styled.TouchableOpacity`
   background-color: ${colors.EmailSignInBtnBackgroundColor};
   border-radius: 10px;
   margin-top: 3%;
-
   justify-content: center;
   align-items: center;
 `;
@@ -57,11 +56,84 @@ const BtnGoBackText = styled.Text`
 `;
 
 export default function EmailSignIn({ navigation }) {
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [nikname, setNikname] = useState("");
+  const auth = getAuth();
+
+  const SignInEmail = async () => {
+    try {
+      if (verifyInputs()) {
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        const user = result.user;
+        console.log(user);
+      }
+    } catch (error) {
+      if (error.code === "auth/email-already-in-use") {
+        console.log("That email address is already in use!");
+      }
+      console.log("SignInEmail", error.message);
+    }
+  };
+
+  const clearInput = () => {
+    setPhone("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setNikname("");
+  };
+  const isEmail = (email) => {
+    var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+    return regex.test(email);
+  };
+  const verifyInputs = () => {
+    if (!nikname || !password || !confirmPassword || !email || !phone) {
+      return Alert.alert("Some field is empty! Check it, please!");
+    } else if (password !== confirmPassword) {
+      return Alert.alert("Passwords don't match");
+    } else if (password.length < 6) {
+      return Alert.alert("Your password should be longer than 6 symbols");
+    } else if (!isEmail(email)) {
+      return Alert.alert("Something wrong with your email");
+    } else {
+      return true;
+    }
+  };
+
   return (
     <EmailSign>
       <EmailSignTitle>EmailSignIn</EmailSignTitle>
+      <BlockEmailSign>
+        <EmailSignInput placeholder="Email" value={email} inputMode="email" onChangeText={setEmail}></EmailSignInput>
+        <EmailSignInput
+          placeholder="Phone Number"
+          value={phone}
+          keyboardType="phone-pad"
+          onChangeText={setPhone}
+        ></EmailSignInput>
+        <EmailSignInput
+          placeholder="Come up with password"
+          value={password}
+          secureTextEntry={true}
+          onChangeText={setPassword}
+        ></EmailSignInput>
+        <EmailSignInput
+          placeholder="Confirm your password"
+          value={confirmPassword}
+          secureTextEntry={true}
+          onChangeText={setConfirmPassword}
+        ></EmailSignInput>
+        <EmailSignInput placeholder="Come up with nikname" value={nikname} onChangeText={setNikname}></EmailSignInput>
+        <EmailSignBtn onPress={() => SignInEmail()}>
+          <EmailSignBtnText>Registrate me</EmailSignBtnText>
+        </EmailSignBtn>
+      </BlockEmailSign>
+
       <BtnGoBack>
-        <BtnGoBackText onPress={() => navigation.navigate("Login")}>Go back</BtnGoBackText>
+        <BtnGoBackText onPress={() => navigation.navigate("Registration")}>Go back</BtnGoBackText>
       </BtnGoBack>
     </EmailSign>
   );
