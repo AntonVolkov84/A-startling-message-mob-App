@@ -4,6 +4,7 @@ import * as colors from "../variables/colors";
 import styled from "styled-components";
 import Recaptcha from "react-native-recaptcha-that-works";
 import auth from "@react-native-firebase/auth";
+import { getAuth, updateProfile, createUserWithEmailAndPassword } from "firebase/auth";
 
 const PhoneSignIn = styled.View`
   width: 100%;
@@ -56,7 +57,7 @@ const BtnGoBackText = styled.Text`
   color: ${colors.RegistrationScreenBtnGoBack};
   font-size: 25px;
 `;
-export default function PhoneSignin({ navigation }) {
+export default function PhoneSignin({ navigation, setModalPhoneSignIn }) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,6 +67,7 @@ export default function PhoneSignin({ navigation }) {
   const [confirmInput, setConfirmInput] = useState(false);
   const [confirm, setConfirm] = useState(null);
   const recaptchaRef = useRef();
+  const firebaseAuth = getAuth();
 
   const phoneSignInApp = async () => {
     if (verifyInputs()) {
@@ -122,10 +124,12 @@ export default function PhoneSignin({ navigation }) {
     try {
       const result = await confirm.confirm(code);
       if (result.user) {
-        const user = auth().currentUser;
-        await user.updateProfile({
-          displayName: nikname,
-        });
+        try {
+          await createUserWithEmailAndPassword(firebaseAuth, email, password);
+          await updateProfile(firebaseAuth.currentUser, { phoneNumber: phone, displayName: nikname });
+        } catch (error) {
+          console.log("updateProfile from handleVerifyCode", error.message);
+        }
       }
       setCode("");
       clearInput();
@@ -189,7 +193,7 @@ export default function PhoneSignin({ navigation }) {
         }}
       />
       <BtnGoBack>
-        <BtnGoBackText onPress={() => navigation.navigate("Registration")}>Go back</BtnGoBackText>
+        <BtnGoBackText onPress={() => setModalPhoneSignIn(false)}>Go back</BtnGoBackText>
       </BtnGoBack>
     </PhoneSignIn>
   );

@@ -14,32 +14,13 @@ const BlockDashboard = styled.View`
 `;
 
 export default function DashBoardScreen() {
-  const [authInfo, setAuthInfo] = useState({ provider: "none", user: null });
-  const checkCurrentAuth = () => {
-    const firebaseAuth = getAuth();
-    const firebaseUser = firebaseAuth.currentUser;
-    const reactNativeFirebaseUser = auth().currentUser;
-    console.log("firebase", firebaseUser, "reactNative", reactNativeFirebaseUser);
-    if (firebaseUser) {
-      return { provider: "firebase", user: firebaseUser };
-    } else if (reactNativeFirebaseUser) {
-      return { provider: "react-native-firebase", user: reactNativeFirebaseUser };
-    } else {
-      return { provider: "none", user: null };
-    }
-  };
-  useEffect(() => {
-    const authStatus = checkCurrentAuth();
-    setAuthInfo(authStatus);
-  }, []);
-  const handleSignedOut = async (authInfo) => {
+  const authFirebase = getAuth();
+  console.log("Dash", authFirebase);
+  const handleSignedOut = async () => {
     try {
-      if (authInfo.provider === "react-native-firebase") {
-        auth().signOut();
-      } else if (authInfo.provider === "firebase") {
-        const auth = getAuth();
-        signOut(auth);
-      }
+      const authFirebase = getAuth();
+      signOut(authFirebase);
+      auth().signOut();
     } catch (error) {
       console.log("HandleSignedOut", error.message);
     }
@@ -61,7 +42,7 @@ export default function DashBoardScreen() {
         <Button
           title="SignOut"
           onPress={() => {
-            handleSignedOut(authInfo);
+            handleSignedOut();
           }}
         ></Button>
       </BlockDashboard>

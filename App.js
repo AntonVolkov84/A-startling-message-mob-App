@@ -16,7 +16,7 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [user, setUser] = useState("");
-  const [authInfo, setAuthInfo] = useState({ provider: "none", user: null });
+
   useEffect(() => {
     customNavigationBar();
   });
@@ -30,7 +30,7 @@ export default function App() {
         setUser(null);
       }
     });
-    const unsubscribeReactNativeFirebaseAuth = auth().onAuthStateChanged((reactNativeFirebaseUser) => {
+    const unsubscribeReactNativeFirebaseAuth = auth().onAuthStateChanged(async (reactNativeFirebaseUser) => {
       if (reactNativeFirebaseUser) {
         setUser(reactNativeFirebaseUser);
       } else {
@@ -39,7 +39,7 @@ export default function App() {
     });
     return () => {
       unsubscribeFirebaseAuth();
-      unsubscribeReactNativeFirebaseAuth();
+      // unsubscribeReactNativeFirebaseAuth();
     };
   }, []);
   const customNavigationBar = async () => {

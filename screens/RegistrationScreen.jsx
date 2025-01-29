@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as colors from "../variables/colors";
 import PhoneSignin from "../components/PhoneSignin";
 import EmailSignIn from "../components/EmailSignIn";
+
 const BlockSignIn = styled.View`
   width: 100%;
   height: 86%;
@@ -47,6 +48,19 @@ const BtnEmailSignInText = styled.Text`
   font-family: "Pacifico";
   font-size: 22px;
 `;
+const BtnGoogleSignIn = styled.TouchableOpacity`
+  background-color: ${colors.RegistrationScreenBtnSignInBackground};
+  width: 70%;
+  height: 50px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+`;
+const BtnGoogleSignInText = styled.Text`
+  color: ${colors.RegistrationScreenBtnText};
+  font-family: "Pacifico";
+  font-size: 22px;
+`;
 export default function RegistrationScreen({ navigation }) {
   const [modalPhoneSignIn, setModalPhoneSignIn] = useState(false);
   const [modalEmailSignIn, setModalEmailSignIn] = useState(false);
@@ -80,7 +94,6 @@ export default function RegistrationScreen({ navigation }) {
           >
             <BtnPhoneSignInText style={{ fontFamily: "Playwrite" }}>Sign in with phone</BtnPhoneSignInText>
           </BtnPhoneSignIn>
-
           <BtnEmailSignIn
             onPress={() => {
               setModalEmailSignIn(true);
@@ -88,6 +101,13 @@ export default function RegistrationScreen({ navigation }) {
           >
             <BtnEmailSignInText>Sign in with email</BtnEmailSignInText>
           </BtnEmailSignIn>
+          <BtnGoogleSignIn
+            onPress={() => {
+              console.log("Google");
+            }}
+          >
+            <BtnGoogleSignInText>Sign in with Google</BtnGoogleSignInText>
+          </BtnGoogleSignIn>
         </BlockSignIn>
       )}
 

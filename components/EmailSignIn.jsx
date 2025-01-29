@@ -55,7 +55,7 @@ const BtnGoBackText = styled.Text`
   font-size: 25px;
 `;
 
-export default function EmailSignIn({ navigation }) {
+export default function EmailSignIn({ navigation, setModalEmailSignIn }) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,9 +66,7 @@ export default function EmailSignIn({ navigation }) {
   const SignInEmail = async () => {
     try {
       if (verifyInputs()) {
-        const result = await createUserWithEmailAndPassword(auth, email, password);
-        const user = result.user;
-        console.log(user);
+        await createUserWithEmailAndPassword(auth, email, password);
       }
     } catch (error) {
       if (error.code === "auth/email-already-in-use") {
@@ -133,7 +131,7 @@ export default function EmailSignIn({ navigation }) {
       </BlockEmailSign>
 
       <BtnGoBack>
-        <BtnGoBackText onPress={() => navigation.navigate("Registration")}>Go back</BtnGoBackText>
+        <BtnGoBackText onPress={() => setModalEmailSignIn(false)}>Go back</BtnGoBackText>
       </BtnGoBack>
     </EmailSign>
   );
