@@ -4,7 +4,7 @@ import * as colors from "../variables/colors";
 import styled from "styled-components";
 import Recaptcha from "react-native-recaptcha-that-works";
 import auth from "@react-native-firebase/auth";
-import { getAuth, updateProfile, createUserWithEmailAndPassword } from "firebase/auth";
+import { getAuth, updateProfile, createUserWithEmailAndPassword, linkWithCredential } from "firebase/auth";
 
 const PhoneSignIn = styled.View`
   width: 100%;
@@ -69,13 +69,81 @@ export default function PhoneSignin({ navigation, setModalPhoneSignIn }) {
   const recaptchaRef = useRef();
   const firebaseAuth = getAuth();
 
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verificationId, setVerificationId] = useState(null);
+
+  const register = async (token) => {
+    try {
+      const response = await fetch(
+        "https://identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key=AIzaSyDfJfOIoEjz7LsL-G2VafThBMRYCXvl-jI",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phoneNumber: phone,
+            recaptchaToken: token,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      setVerificationId(data.sessionInfo);
+      setConfirmInput(true);
+    } catch (error) {
+      console.error("Error registering user", error);
+    }
+  };
+  const verifyCode = async () => {
+    try {
+      const response = await fetch(
+        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key=AIzaSyDfJfOIoEjz7LsL-G2VafThBMRYCXvl-jI",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sessionInfo: verificationId,
+            code: code,
+          }),
+        }
+      );
+      const data = await response.json();
+      const phoneNumberIdToken = data.idToken;
+      const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      const user = userCredential.user;
+      const userToken = await user.getIdToken();
+      await updateProfile(user, { displayName: nikname });
+      // const credential = data.idToken;
+      const res1 = await fetch(
+        "https://identitytoolkit.googleapis.com/v1/accounts:update?key=AIzaSyDfJfOIoEjz7LsL-G2VafThBMRYCXvl-jI",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            idToken: userToken,
+            phoneNumber: phone,
+            returnSecureToken: true,
+          }),
+        }
+      );
+      const data1 = await res1.json();
+      console.log("data1", data1);
+    } catch (error) {
+      console.error("Error verifying code", error);
+    }
+  };
+
   const phoneSignInApp = async () => {
     if (verifyInputs()) {
       try {
-        const confirmation = await auth().signInWithPhoneNumber(phone);
-        setConfirm(confirmation);
-        // recaptchaRef.current.open();
-        setConfirmInput(true);
+        // const confirmation = await auth().signInWithPhoneNumber(phone);
+        // setConfirm(confirmation);
+        recaptchaRef.current.open();
       } catch (error) {
         console.log("Error during phone sign in:", error);
         Alert.alert("Error during phone sign in. Please try again.");
@@ -83,14 +151,7 @@ export default function PhoneSignin({ navigation, setModalPhoneSignIn }) {
     }
   };
   const onVerify = async () => {
-    try {
-      const confirmation = await auth().signInWithPhoneNumber(phone);
-      setConfirm(confirmation);
-      setConfirmInput(true);
-    } catch (error) {
-      console.log("Error during phone sign in:", error);
-      Alert.alert("Error during phone sign in. Please try again.");
-    }
+    setConfirmInput(true);
   };
   const clearInput = () => {
     setPhone("");
@@ -178,7 +239,7 @@ export default function PhoneSignin({ navigation, setModalPhoneSignIn }) {
         {confirmInput ? (
           <>
             <PhoneSignInInput placeholder="Type code from sms" value={code} onChangeText={setCode}></PhoneSignInInput>
-            <PhoneSignInBtn onPress={() => handleVerifyCode()}>
+            <PhoneSignInBtn onPress={() => verifyCode()}>
               <PhoneSignInBtnText>Confirm code</PhoneSignInBtnText>
             </PhoneSignInBtn>
           </>
@@ -189,7 +250,7 @@ export default function PhoneSignin({ navigation, setModalPhoneSignIn }) {
         siteKey={process.env.EXPO_PUBLIC_API_SITEKEY}
         baseUrl="http://localhost"
         onVerify={(token) => {
-          onVerify(token);
+          register(token);
         }}
       />
       <BtnGoBack>

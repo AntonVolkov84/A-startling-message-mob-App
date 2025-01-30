@@ -92,7 +92,7 @@ export default function RegistrationScreen({ navigation }) {
               setModalPhoneSignIn(true);
             }}
           >
-            <BtnPhoneSignInText style={{ fontFamily: "Playwrite" }}>Sign in with phone</BtnPhoneSignInText>
+            <BtnPhoneSignInText>Sign in with phone</BtnPhoneSignInText>
           </BtnPhoneSignIn>
           <BtnEmailSignIn
             onPress={() => {

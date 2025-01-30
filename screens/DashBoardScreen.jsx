@@ -15,7 +15,7 @@ const BlockDashboard = styled.View`
 
 export default function DashBoardScreen() {
   const authFirebase = getAuth();
-  console.log("Dash", authFirebase);
+  console.log("Dash", authFirebase.currentUser);
   const handleSignedOut = async () => {
     try {
       const authFirebase = getAuth();
