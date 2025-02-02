@@ -3,11 +3,13 @@ import React, { useState, useRef } from "react";
 import * as colors from "../variables/colors";
 import styled from "styled-components";
 import Recaptcha from "react-native-recaptcha-that-works";
-import auth from "@react-native-firebase/auth";
-import { getAuth, updateProfile, createUserWithEmailAndPassword } from "firebase/auth";
+import { getAuth, updateProfile, createUserWithEmailAndPassword, signOut, sendEmailVerification } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { app, db } from "../firebaseConfig";
 
 const PhoneSignIn = styled.View`
   width: 100%;
+  margin-top: 5%;
   height: 100%;
   position: relative;
 `;
@@ -38,7 +40,6 @@ const PhoneSignInBtn = styled.TouchableOpacity`
   background-color: ${colors.PhoneSignInBtnBackgroundColor};
   border-radius: 10px;
   margin-top: 3%;
-
   justify-content: center;
   align-items: center;
 `;
@@ -57,17 +58,34 @@ const BtnGoBackText = styled.Text`
   color: ${colors.RegistrationScreenBtnGoBack};
   font-size: 25px;
 `;
-export default function PhoneSignin({ navigation, setModalPhoneSignIn }) {
-  const [phone, setPhone] = useState("+380952788280");
-  const [email, setEmail] = useState("ant@volkov.com");
-  const [password, setPassword] = useState("123123");
-  const [confirmPassword, setConfirmPassword] = useState("123123");
-  const [nikname, setNikname] = useState("Anton");
+export default function PhoneSignin({ navigation }) {
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [nikname, setNikname] = useState("");
   const [code, setCode] = useState("");
   const [confirmInput, setConfirmInput] = useState(false);
   const recaptchaRef = useRef();
   const firebaseAuth = getAuth();
   const [verificationId, setVerificationId] = useState(null);
+
+  const addToUsers = async (userId) => {
+    const emailInLowerCase = email.toLowerCase();
+    try {
+      const user = {
+        language: "en",
+        timestamp: serverTimestamp(),
+        nikname: nikname,
+        email: emailInLowerCase,
+        userId: userId,
+        phoneNumber: phone,
+      };
+      await setDoc(doc(db, "users", emailInLowerCase), user);
+    } catch (error) {
+      console.log("add to users", error);
+    }
+  };
 
   const register = async (token) => {
     try {
@@ -118,6 +136,14 @@ export default function PhoneSignin({ navigation, setModalPhoneSignIn }) {
       const user = userCredential.user;
       const userToken = await user.getIdToken();
       await updateProfile(user, { displayName: nikname, phoneNumber: phone });
+      const userId = user.uid;
+      if (userId) {
+        await sendEmailVerification(user);
+        Alert.alert("You may recived a mail with link for authorization");
+        navigation.navigate("Login");
+        addToUsers(userId);
+        signOut(firebaseAuth);
+      }
       return userToken;
     } catch (error) {
       console.log("registerWithEmail", error.message);
@@ -156,7 +182,7 @@ export default function PhoneSignin({ navigation, setModalPhoneSignIn }) {
 
   return (
     <PhoneSignIn>
-      <PhoneSignInTitle>PhoneSignin</PhoneSignInTitle>
+      <PhoneSignInTitle>Registration</PhoneSignInTitle>
       <BlockPhoneSignIn>
         <PhoneSignInInput
           placeholder="Phone Number"
@@ -208,7 +234,7 @@ export default function PhoneSignin({ navigation, setModalPhoneSignIn }) {
         }}
       />
       <BtnGoBack>
-        <BtnGoBackText onPress={() => setModalPhoneSignIn(false)}>Go back</BtnGoBackText>
+        <BtnGoBackText onPress={() => navigation.goBack()}>Go back</BtnGoBackText>
       </BtnGoBack>
     </PhoneSignIn>
   );

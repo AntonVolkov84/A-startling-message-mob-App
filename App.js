@@ -19,7 +19,7 @@ export default function App() {
   useEffect(() => {
     customNavigationBar();
   });
-  console.log("firebaseAuth.currentUser", firebaseAuth.currentUser);
+
   useEffect(() => {
     const firebaseAuth = getAuth();
     const unsubscribeFirebaseAuth = onFirebaseAuthStateChanged(firebaseAuth, (firebaseUser) => {
@@ -38,7 +38,7 @@ export default function App() {
     await NavigationBar.setBackgroundColorAsync("#1E2322");
     await NavigationBar.setButtonStyleAsync("light");
   };
-  if (!user) {
+  if (!user || !user.emailVerified) {
     return (
       <NavigationContainer>
         <StatusBar style="light" />
