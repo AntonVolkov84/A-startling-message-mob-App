@@ -8,7 +8,6 @@ import * as NavigationBar from "expo-navigation-bar";
 import { useEffect, useState } from "react";
 import RegistrationScreen from "./screens/RegistrationScreen";
 import DashBoardScreen from "./screens/DashBoardScreen";
-import auth from "@react-native-firebase/auth";
 import { app } from "./firebaseConfig";
 import { getAuth, onAuthStateChanged as onFirebaseAuthStateChanged } from "firebase/auth";
 
@@ -16,11 +15,11 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [user, setUser] = useState("");
-
+  const firebaseAuth = getAuth();
   useEffect(() => {
     customNavigationBar();
   });
-
+  console.log("firebaseAuth.currentUser", firebaseAuth.currentUser);
   useEffect(() => {
     const firebaseAuth = getAuth();
     const unsubscribeFirebaseAuth = onFirebaseAuthStateChanged(firebaseAuth, (firebaseUser) => {
@@ -30,16 +29,9 @@ export default function App() {
         setUser(null);
       }
     });
-    const unsubscribeReactNativeFirebaseAuth = auth().onAuthStateChanged(async (reactNativeFirebaseUser) => {
-      if (reactNativeFirebaseUser) {
-        setUser(reactNativeFirebaseUser);
-      } else {
-        setUser(null);
-      }
-    });
+
     return () => {
       unsubscribeFirebaseAuth();
-      // unsubscribeReactNativeFirebaseAuth();
     };
   }, []);
   const customNavigationBar = async () => {
@@ -50,7 +42,7 @@ export default function App() {
     return (
       <NavigationContainer>
         <StatusBar style="light" />
-        <Stack.Navigator initialRouteName="Registration">
+        <Stack.Navigator initialRouteName="Login">
           <Stack.Screen
             name="Login"
             component={LoginScreen}

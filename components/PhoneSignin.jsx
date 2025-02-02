@@ -4,7 +4,7 @@ import * as colors from "../variables/colors";
 import styled from "styled-components";
 import Recaptcha from "react-native-recaptcha-that-works";
 import auth from "@react-native-firebase/auth";
-import { getAuth, updateProfile, createUserWithEmailAndPassword, linkWithCredential } from "firebase/auth";
+import { getAuth, updateProfile, createUserWithEmailAndPassword } from "firebase/auth";
 
 const PhoneSignIn = styled.View`
   width: 100%;
@@ -58,18 +58,15 @@ const BtnGoBackText = styled.Text`
   font-size: 25px;
 `;
 export default function PhoneSignin({ navigation, setModalPhoneSignIn }) {
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [nikname, setNikname] = useState("");
+  const [phone, setPhone] = useState("+380952788280");
+  const [email, setEmail] = useState("ant@volkov.com");
+  const [password, setPassword] = useState("123123");
+  const [confirmPassword, setConfirmPassword] = useState("123123");
+  const [nikname, setNikname] = useState("Anton");
   const [code, setCode] = useState("");
   const [confirmInput, setConfirmInput] = useState(false);
-  const [confirm, setConfirm] = useState(null);
   const recaptchaRef = useRef();
   const firebaseAuth = getAuth();
-
-  const [verificationCode, setVerificationCode] = useState("");
   const [verificationId, setVerificationId] = useState(null);
 
   const register = async (token) => {
@@ -87,7 +84,6 @@ export default function PhoneSignin({ navigation, setModalPhoneSignIn }) {
           }),
         }
       );
-
       const data = await response.json();
       setVerificationId(data.sessionInfo);
       setConfirmInput(true);
@@ -97,7 +93,7 @@ export default function PhoneSignin({ navigation, setModalPhoneSignIn }) {
   };
   const verifyCode = async () => {
     try {
-      const response = await fetch(
+      await fetch(
         "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key=AIzaSyDfJfOIoEjz7LsL-G2VafThBMRYCXvl-jI",
         {
           method: "POST",
@@ -110,49 +106,29 @@ export default function PhoneSignin({ navigation, setModalPhoneSignIn }) {
           }),
         }
       );
-      const data = await response.json();
-      const phoneNumberIdToken = data.idToken;
-      const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-      const user = userCredential.user;
-      const userToken = await user.getIdToken();
-      await updateProfile(user, { displayName: nikname });
-      // const credential = data.idToken;
-      const res1 = await fetch(
-        "https://identitytoolkit.googleapis.com/v1/accounts:update?key=AIzaSyDfJfOIoEjz7LsL-G2VafThBMRYCXvl-jI",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            idToken: userToken,
-            phoneNumber: phone,
-            returnSecureToken: true,
-          }),
-        }
-      );
-      const data1 = await res1.json();
-      console.log("data1", data1);
+      await registerWithEmail();
+      clearInput();
     } catch (error) {
       console.error("Error verifying code", error);
     }
   };
-
-  const phoneSignInApp = async () => {
-    if (verifyInputs()) {
-      try {
-        // const confirmation = await auth().signInWithPhoneNumber(phone);
-        // setConfirm(confirmation);
-        recaptchaRef.current.open();
-      } catch (error) {
-        console.log("Error during phone sign in:", error);
-        Alert.alert("Error during phone sign in. Please try again.");
-      }
+  const registerWithEmail = async () => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      const user = userCredential.user;
+      const userToken = await user.getIdToken();
+      await updateProfile(user, { displayName: nikname, phoneNumber: phone });
+      return userToken;
+    } catch (error) {
+      console.log("registerWithEmail", error.message);
     }
   };
-  const onVerify = async () => {
-    setConfirmInput(true);
+  const phoneSignInApp = () => {
+    if (verifyInputs()) {
+      recaptchaRef.current.open();
+    }
   };
+
   const clearInput = () => {
     setPhone("");
     setEmail("");
@@ -175,28 +151,6 @@ export default function PhoneSignin({ navigation, setModalPhoneSignIn }) {
       return Alert.alert("Something wrong with your email");
     } else {
       return true;
-    }
-  };
-
-  const handleVerifyCode = async () => {
-    if (!code) {
-      Alert.alert("Something wrong with confirmation code");
-    }
-    try {
-      const result = await confirm.confirm(code);
-      if (result.user) {
-        try {
-          await createUserWithEmailAndPassword(firebaseAuth, email, password);
-          await updateProfile(firebaseAuth.currentUser, { phoneNumber: phone, displayName: nikname });
-        } catch (error) {
-          console.log("updateProfile from handleVerifyCode", error.message);
-        }
-      }
-      setCode("");
-      clearInput();
-      setConfirmInput(false);
-    } catch (error) {
-      console.log("Invalid code.");
     }
   };
 
