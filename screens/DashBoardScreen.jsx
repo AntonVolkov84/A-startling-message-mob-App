@@ -70,7 +70,7 @@ const Icon = styled.TouchableOpacity`
 `;
 const BlockImage = styled.TouchableOpacity`
   background-color: ${colors.ProfileImageBackground};
-  width: 80%;
+  width: 70%;
   aspect-ratio: 1;
   margin: 5% auto;
   border-radius: 50%;
@@ -97,7 +97,7 @@ export default function DashBoardScreen() {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
-      aspect: [3, 3],
+      aspect: [4, 4],
       quality: 1,
     });
     if (result) {
@@ -119,8 +119,10 @@ export default function DashBoardScreen() {
     });
   }, []);
   useEffect(() => {
-    if (userData.hasOwnProperty("photoUrl")) {
-      setUserDataPhotoUrl(userData.photoUrl);
+    if (userData) {
+      if (userData.hasOwnProperty("photoUrl")) {
+        setUserDataPhotoUrl(userData.photoUrl);
+      }
     }
   }, [userData]);
   const handleSignedOut = async () => {
@@ -204,11 +206,11 @@ export default function DashBoardScreen() {
                 <ProfileInfoLine></ProfileInfoLine>
                 <BlockImage onPress={() => pickImage()}>
                   {userDataPhotoUrl ? (
-                    <Image source={{ uri: userDataPhotoUrl }} style={{ width: "100%", height: "100%" }} />
+                    <Image source={{ uri: userDataPhotoUrl }} style={{ width: "108%", height: "108%" }} />
                   ) : (
                     <>
                       {newPhotoURL ? (
-                        <Image source={{ uri: newPhotoURL }} style={{ width: "100%", height: "100%" }} />
+                        <Image source={{ uri: newPhotoURL }} style={{ width: "108%", height: "108%" }} />
                       ) : (
                         <BlockImageText>Press here to choose your avatar</BlockImageText>
                       )}
