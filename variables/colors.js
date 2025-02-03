@@ -15,3 +15,4 @@ export const FooterIconBtnBackgroundColor = "#274d60";
 export const ProfileInfoText = "whitesmoke";
 export const ProfileIcon = "#274d60";
 export const ProfileIconBackground = "#6ba3be";
+export const ProfileImageBackground = "#6ba3be";

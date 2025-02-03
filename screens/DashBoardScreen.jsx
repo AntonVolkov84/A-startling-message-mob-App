@@ -1,5 +1,4 @@
-import { View, Text, Button, TouchableOpacity, Alert } from "react-native";
-import auth from "@react-native-firebase/auth";
+import { View, Text, Button, TouchableOpacity, Image, Alert } from "react-native";
 import { getAuth, signOut } from "firebase/auth";
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
@@ -7,8 +6,10 @@ import * as colors from "../variables/colors.js";
 import { LinearGradient } from "expo-linear-gradient";
 import Footer from "../components/Footer.jsx";
 import { doc, setDoc, onSnapshot } from "firebase/firestore";
-import { db } from "../firebaseConfig.js";
+import { db, app } from "../firebaseConfig.js";
 import Entypo from "@expo/vector-icons/Entypo";
+import ModalNikname from "../components/ModalNikname.jsx";
+import * as ImagePicker from "expo-image-picker";
 
 const BlockDashboard = styled.View`
   width: 100%;
@@ -67,86 +68,70 @@ const Icon = styled.TouchableOpacity`
   justify-content: center;
   border-radius: 5px;
 `;
-const BlockModalChangeNikname = styled.View`
-  position: absolute;
-  width: 100%;
-  height: 110%;
-  padding-top: 5%;
-  z-index: 2;
-`;
-const ChangeNiknameInput = styled.TextInput`
-  width: 70%;
-  height: 50px;
-  background-color: #6ba3be;
+const BlockImage = styled.TouchableOpacity`
+  background-color: ${colors.ProfileImageBackground};
+  width: 80%;
+  aspect-ratio: 1;
+  margin: 5% auto;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
   padding-left: 10px;
-  border-radius: 10px;
-  margin-top: 3%;
-  font-size: 20px;
+  padding-right: 10px;
+  overflow: hidden;
 `;
-const ChangeBtn = styled.TouchableOpacity`
-  width: 70%;
-  height: 50px;
-  background-color: ${colors.PhoneSignInBtnBackgroundColor};
-  border-radius: 10px;
-  margin-top: 3%;
-  justify-content: center;
-  align-items: center;
-`;
-const ChangeBtnText = styled.Text`
-  color: ${colors.PhoneSignInText};
-  font-size: 20px;
-`;
-const ChangeBtnCansel = styled.TouchableOpacity`
-  width: 70%;
-  height: 50px;
-  background-color: ${colors.PhoneSignInBtnBackgroundColor};
-  border-radius: 10px;
-  margin-top: 3%;
-  justify-content: center;
-  align-items: center;
-`;
-const ChangeBtnCanselText = styled.Text`
-  color: ${colors.PhoneSignInText};
-  font-size: 20px;
+const BlockImageText = styled.Text`
+  color: ${colors.ProfileInfoText};
+  font-size: 30px;
+  text-align: center;
 `;
 export default function DashBoardScreen() {
   const [modalProfile, setModalProfile] = useState(false);
   const [modalChangeNikname, setModalChangeNikname] = useState(false);
-  const [modalChangeLanguage, setModalChangeLanguage] = useState(false);
-  const [newNikname, setNewNikname] = useState("");
-  const [lng, setLng] = useState("");
   const [userData, setUserData] = useState();
+  const [userDataPhotoUrl, setUserDataPhotoUrl] = useState();
+  const [newPhotoURL, setNewPhotoURL] = useState();
   const authFirebase = getAuth();
 
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [3, 3],
+      quality: 1,
+    });
+    if (result) {
+      const uriForStorage = result.assets[0].uri;
+      setNewPhotoURL(uriForStorage);
+      updateWithNewPhotoUrl();
+    }
+  };
+  const updateWithNewPhotoUrl = async () => {
+    if (newPhotoURL.length < 1) {
+      return Alert.alert("Something wrong with your photo");
+    }
+    const userRef = doc(db, "users", authFirebase.currentUser.email);
+    await setDoc(userRef, { photoUrl: newPhotoURL }, { merge: true });
+  };
   useEffect(() => {
     onSnapshot(doc(db, "users", authFirebase.currentUser.email), (snapshot) => {
       setUserData(snapshot.data());
     });
   }, []);
+  useEffect(() => {
+    if (userData.hasOwnProperty("photoUrl")) {
+      setUserDataPhotoUrl(userData.photoUrl);
+    }
+  }, [userData]);
   const handleSignedOut = async () => {
     try {
       const authFirebase = getAuth();
       signOut(authFirebase);
-      auth().signOut();
     } catch (error) {
       console.log("HandleSignedOut", error.message);
     }
   };
-  const handleChangeNikname = async () => {
-    if (newNikname.length < 1) {
-      return Alert.alert("Your nikname should be longer then 1 symbol");
-    }
-    const cityRef = doc(db, "users", authFirebase.currentUser.email);
-    await setDoc(cityRef, { nikname: newNikname }, { merge: true });
-  };
-  const handleChangeLanguage = async () => {
-    if (lng.length < 1) {
-      return Alert.alert("Your language should be longer then 1 symbol");
-    }
-    const cityRef = doc(db, "users", authFirebase.currentUser.email);
-    await setDoc(cityRef, { language: lng }, { merge: true });
-    setNewNikname("");
-  };
+
   return (
     <LinearGradient
       colors={[
@@ -200,7 +185,7 @@ export default function DashBoardScreen() {
                 <BlockWithIcon>
                   <ProfileInfoText>{userData?.language || "Loading.."}</ProfileInfoText>
                   <Icon
-                    onPress={() => setModalChangeLanguage(true)}
+                    onPress={() => console.log("future relise")}
                     style={{
                       shadowColor: "#000",
                       shadowOffset: {
@@ -217,6 +202,19 @@ export default function DashBoardScreen() {
                   </Icon>
                 </BlockWithIcon>
                 <ProfileInfoLine></ProfileInfoLine>
+                <BlockImage onPress={() => pickImage()}>
+                  {userDataPhotoUrl ? (
+                    <Image source={{ uri: userDataPhotoUrl }} style={{ width: "100%", height: "100%" }} />
+                  ) : (
+                    <>
+                      {newPhotoURL ? (
+                        <Image source={{ uri: newPhotoURL }} style={{ width: "100%", height: "100%" }} />
+                      ) : (
+                        <BlockImageText>Press here to choose your avatar</BlockImageText>
+                      )}
+                    </>
+                  )}
+                </BlockImage>
               </ProfileInfo>
             </BlockProfileInfo>
 
@@ -227,77 +225,7 @@ export default function DashBoardScreen() {
               }}
             ></Button>
           </BlockDashboardProfile>
-          {modalChangeNikname ? (
-            <BlockModalChangeNikname>
-              <LinearGradient
-                colors={[
-                  colors.LoginScreenGradientStart,
-                  colors.LoginScreenGradientEnd,
-                  colors.LoginScreenGradientEnd2,
-                  colors.LoginScreenGradientEnd3,
-                ]}
-                start={{ x: 0.0, y: 0.0 }}
-                end={{ x: 1.0, y: 1.0 }}
-                style={{
-                  height: "100%",
-                  width: "100%",
-                  paddingTop: "15%",
-                  paddingLeft: "5%",
-                  alignItems: "center",
-                }}
-              >
-                <ChangeNiknameInput
-                  placeholder="Come up with new nikname"
-                  value={newNikname}
-                  onChangeText={setNewNikname}
-                ></ChangeNiknameInput>
-                <ChangeBtn
-                  onPress={() => {
-                    handleChangeNikname();
-                    setModalChangeNikname(false);
-                  }}
-                >
-                  <ChangeBtnText>Change nikname</ChangeBtnText>
-                </ChangeBtn>
-                <ChangeBtnCansel onPress={() => setModalChangeNikname(false)}>
-                  <ChangeBtnCanselText>Cansel</ChangeBtnCanselText>
-                </ChangeBtnCansel>
-              </LinearGradient>
-            </BlockModalChangeNikname>
-          ) : null}
-          {modalChangeLanguage ? (
-            <BlockModalChangeNikname>
-              <LinearGradient
-                colors={[
-                  colors.LoginScreenGradientStart,
-                  colors.LoginScreenGradientEnd,
-                  colors.LoginScreenGradientEnd2,
-                  colors.LoginScreenGradientEnd3,
-                ]}
-                start={{ x: 0.0, y: 0.0 }}
-                end={{ x: 1.0, y: 1.0 }}
-                style={{
-                  height: "100%",
-                  width: "100%",
-                  paddingTop: "15%",
-                  paddingLeft: "5%",
-                  alignItems: "center",
-                }}
-              >
-                <ChangeBtn
-                  onPress={() => {
-                    handleChangeLanguage();
-                    setModalChangeLanguage(false);
-                  }}
-                >
-                  <ChangeBtnText>Change language</ChangeBtnText>
-                </ChangeBtn>
-                <ChangeBtnCansel onPress={() => setModalChangeLanguage(false)}>
-                  <ChangeBtnCanselText>Cansel</ChangeBtnCanselText>
-                </ChangeBtnCansel>
-              </LinearGradient>
-            </BlockModalChangeNikname>
-          ) : null}
+          {modalChangeNikname ? <ModalNikname setModalChangeNikname={setModalChangeNikname} /> : null}
         </>
       ) : (
         <BlockDashboard>
