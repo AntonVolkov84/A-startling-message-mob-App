@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "784492008154",
-    "project_id": "a-startling-message",
-    "storage_bucket": "a-startling-message.firebasestorage.app"
+    "project_number": "899594134591",
+    "project_id": "a-startling-message-de67b",
+    "storage_bucket": "a-startling-message-de67b.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:784492008154:android:adabfb45d27b4f28338be3",
+        "mobilesdk_app_id": "1:899594134591:android:19d5d853f8236d6c1f448a",
         "android_client_info": {
           "package_name": "com.ant_volkov.astartlingmessage"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAl6pQNz_0KKJG5VAqQfGI2XjBCR00BwSE"
+          "current_key": "AIzaSyBb7iDs3jQ1yMgQUcmPSSZDNK8-Dmwfyzw"
         }
       ],
       "services": {

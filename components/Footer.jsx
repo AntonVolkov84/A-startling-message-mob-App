@@ -44,7 +44,7 @@ export default function Footer({
   setModalChangeNikname,
 }) {
   const redirectToSite = () => {
-    const link = "https://a-startling-message.web.app/";
+    const link = "https://a-startling-message-de67b.web.app/";
     Linking.openURL(link);
   };
   return (

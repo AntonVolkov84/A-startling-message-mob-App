@@ -5,13 +5,12 @@ import { initializeAuth, getReactNativePersistence } from "firebase/auth";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
 export const firebaseConfig = {
-  apiKey: "AIzaSyDfJfOIoEjz7LsL-G2VafThBMRYCXvl-jI",
-  authDomain: "a-startling-message.firebaseapp.com",
-  projectId: "a-startling-message",
-  storageBucket: "a-startling-message.firebasestorage.app",
-  messagingSenderId: "784492008154",
-  appId: "1:784492008154:web:f172e6caedf9b048338be3",
-  measurementId: "G-KS8ZE1PKX3",
+  apiKey: "AIzaSyA6RB8iNw7-CXgS1GOkGScHK63RJuiMTIQ",
+  authDomain: "a-startling-message-de67b.firebaseapp.com",
+  projectId: "a-startling-message-de67b",
+  storageBucket: "a-startling-message-de67b.firebasestorage.app",
+  messagingSenderId: "899594134591",
+  appId: "1:899594134591:web:4d67a7ff8fde74a41f448a",
 };
 
 if (!firebase.apps.length) {
