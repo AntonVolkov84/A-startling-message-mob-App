@@ -1,6 +1,5 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
-import styled from "styled-components";
 import LoginScreen from "./screens/LoginScreen";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -8,7 +7,6 @@ import * as NavigationBar from "expo-navigation-bar";
 import { useEffect, useState } from "react";
 import RegistrationScreen from "./screens/RegistrationScreen";
 import DashBoardScreen from "./screens/DashBoardScreen";
-import { app } from "./firebaseConfig";
 import { getAuth, onAuthStateChanged as onFirebaseAuthStateChanged } from "firebase/auth";
 
 const Stack = createNativeStackNavigator();
@@ -21,7 +19,6 @@ export default function App() {
   });
 
   useEffect(() => {
-    const firebaseAuth = getAuth();
     const unsubscribeFirebaseAuth = onFirebaseAuthStateChanged(firebaseAuth, (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);

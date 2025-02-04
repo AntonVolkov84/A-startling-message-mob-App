@@ -5,7 +5,7 @@ import styled from "styled-components";
 import Recaptcha from "react-native-recaptcha-that-works";
 import { getAuth, updateProfile, createUserWithEmailAndPassword, signOut, sendEmailVerification } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { app, db } from "../firebaseConfig";
+import { db } from "../firebaseConfig";
 
 const PhoneSignIn = styled.View`
   width: 100%;
@@ -59,12 +59,12 @@ const BtnGoBackText = styled.Text`
   font-size: 25px;
 `;
 export default function PhoneSignin({ navigation }) {
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [nikname, setNikname] = useState("");
-  const [code, setCode] = useState("");
+  const [phone, setPhone] = useState("+380958661514");
+  const [email, setEmail] = useState("antvolkov84@gmail.com");
+  const [password, setPassword] = useState("123123");
+  const [confirmPassword, setConfirmPassword] = useState("123123");
+  const [nikname, setNikname] = useState("Anton");
+  const [code, setCode] = useState("123456");
   const [confirmInput, setConfirmInput] = useState(false);
   const recaptchaRef = useRef();
   const firebaseAuth = getAuth();
@@ -90,7 +90,7 @@ export default function PhoneSignin({ navigation }) {
   const register = async (token) => {
     try {
       const response = await fetch(
-        "https://identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key=AIzaSyDfJfOIoEjz7LsL-G2VafThBMRYCXvl-jI",
+        "https://identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key=AIzaSyA6RB8iNw7-CXgS1GOkGScHK63RJuiMTIQ",
         {
           method: "POST",
           headers: {
@@ -106,13 +106,13 @@ export default function PhoneSignin({ navigation }) {
       setVerificationId(data.sessionInfo);
       setConfirmInput(true);
     } catch (error) {
-      console.error("Error registering user", error);
+      console.error("Error registering user", error.message);
     }
   };
   const verifyCode = async () => {
     try {
       await fetch(
-        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key=AIzaSyDfJfOIoEjz7LsL-G2VafThBMRYCXvl-jI",
+        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key=AIzaSyA6RB8iNw7-CXgS1GOkGScHK63RJuiMTIQ",
         {
           method: "POST",
           headers: {
