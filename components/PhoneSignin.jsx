@@ -59,12 +59,12 @@ const BtnGoBackText = styled.Text`
   font-size: 25px;
 `;
 export default function PhoneSignin({ navigation }) {
-  const [phone, setPhone] = useState("+380958661514");
-  const [email, setEmail] = useState("antvolkov84@gmail.com");
-  const [password, setPassword] = useState("123123");
-  const [confirmPassword, setConfirmPassword] = useState("123123");
-  const [nikname, setNikname] = useState("Anton");
-  const [code, setCode] = useState("123456");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [nikname, setNikname] = useState("");
+  const [code, setCode] = useState("");
   const [confirmInput, setConfirmInput] = useState(false);
   const recaptchaRef = useRef();
   const firebaseAuth = getAuth();
