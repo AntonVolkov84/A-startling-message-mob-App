@@ -75,7 +75,7 @@ export default function DashBoardScreen() {
           setModalChangeNikname={setModalChangeNikname}
         />
       </FooterView>
-      {modalAddCompanion && <AddCompanion />}
+      {modalAddCompanion && <AddCompanion userData={userData} setModalAddCompanion={setModalAddCompanion} />}
     </LinearGradient>
   );
 }

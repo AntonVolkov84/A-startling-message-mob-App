@@ -3,6 +3,23 @@ import React, { useState } from "react";
 import * as colors from "../variables/colors.js";
 import styled from "styled-components";
 import { LinearGradient } from "expo-linear-gradient";
+import {
+  doc,
+  setDoc,
+  addDoc,
+  getDoc,
+  collection,
+  getDocs,
+  where,
+  query,
+  arrayUnion,
+  deleteDoc,
+  updateDoc,
+  limit,
+  serverTimestamp,
+} from "firebase/firestore";
+import { db, app } from "../firebaseConfig.js";
+import { getAuth } from "firebase/auth";
 
 const BlockAddCompanion = styled.View`
   width: 100%;
@@ -55,22 +72,55 @@ const PhoneSignInBtnText = styled.Text`
   color: ${colors.PhoneSignInText};
   font-size: 20px;
 `;
-export default function AddCompanion() {
+export default function AddCompanion({ userData, setModalAddCompanion }) {
   const [phone, setPhone] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const authFirebase = getAuth();
 
   const isPhone = (checkedPhone) => {
     var regex = /^\+\d{1,3}\d{11,14}$/;
     return regex.test(checkedPhone);
   };
   const checkUser = async () => {
-    if (!isPhone(phone)) {
-      return Alert.alert("Something wrong with format your phone");
+    if (!checkPhoneNumber()) {
+      return;
     }
-    console.log(phone);
-    setPhone("");
-  };
+    try {
+      const q = query(collection(db, "users"), where("phoneNumber", "==", phone), limit(1));
+      const querySnapshot = await getDocs(q);
 
+      if (querySnapshot.empty) {
+        return Alert.alert("There is not users with this phone number");
+      }
+      if (!querySnapshot.empty) {
+        const docSnap = querySnapshot.docs[0];
+        const companion = {
+          nikname: docSnap.data().nikname,
+          photoUrl: docSnap.data().photoUrl,
+          phoneNumber: docSnap.data().phoneNumber,
+          email: docSnap.data().email,
+          timestamp: serverTimestamp(),
+        };
+        await setDoc(doc(db, "companions", authFirebase.currentUser.email, "personal_companions", phone), companion);
+        Alert.alert("You add a companion");
+        setPhone("");
+        setModalAddCompanion(false);
+      }
+    } catch (error) {
+      console.log("checkUser", error.message);
+    }
+  };
+  const checkPhoneNumber = () => {
+    if (phone === userData.phoneNumber) {
+      return Alert.alert("This is your number");
+    } else {
+      if (!isPhone(phone)) {
+        return Alert.alert("Something wrong with format your phone");
+      } else {
+        return true;
+      }
+    }
+  };
   return (
     <BlockAddCompanion>
       <LinearGradient
