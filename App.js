@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import RegistrationScreen from "./screens/RegistrationScreen";
 import DashBoardScreen from "./screens/DashBoardScreen";
 import { getAuth, onAuthStateChanged as onFirebaseAuthStateChanged } from "firebase/auth";
+import MessageScreen from "./screens/MessageScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -65,6 +66,13 @@ export default function App() {
           <Stack.Screen
             name="Dashboard"
             component={DashBoardScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="MessageScreen"
+            component={MessageScreen}
             options={{
               headerShown: false,
             }}

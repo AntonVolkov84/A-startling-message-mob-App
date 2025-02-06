@@ -3,21 +3,7 @@ import React, { useState } from "react";
 import * as colors from "../variables/colors.js";
 import styled from "styled-components";
 import { LinearGradient } from "expo-linear-gradient";
-import {
-  doc,
-  setDoc,
-  addDoc,
-  getDoc,
-  collection,
-  getDocs,
-  where,
-  query,
-  arrayUnion,
-  deleteDoc,
-  updateDoc,
-  limit,
-  serverTimestamp,
-} from "firebase/firestore";
+import { doc, addDoc, collection, getDocs, where, query, limit, serverTimestamp } from "firebase/firestore";
 import { db, app } from "../firebaseConfig.js";
 import { getAuth } from "firebase/auth";
 
@@ -64,7 +50,7 @@ const PhoneSignInBtn = styled.TouchableOpacity`
   height: 50px;
   background-color: ${colors.PhoneSignInBtnBackgroundColor};
   border-radius: 10px;
-  margin-top: 3%;
+  margin: 3% auto;
   justify-content: center;
   align-items: center;
 `;
@@ -76,10 +62,70 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
   const [phone, setPhone] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const authFirebase = getAuth();
-
+  const currentUserEmail = authFirebase.currentUser.email;
   const isPhone = (checkedPhone) => {
     var regex = /^\+\d{1,3}\d{11,14}$/;
     return regex.test(checkedPhone);
+  };
+  const alreadyAddedPhone = async () => {
+    try {
+      const q = query(
+        collection(db, "companions", currentUserEmail, "personal_companions"),
+        where("phoneNumber", "==", phone),
+        limit(1)
+      );
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        checkUser();
+      } else if (!querySnapshot.empty) {
+        Alert.alert("This companiom already exist");
+        return true;
+      }
+    } catch (error) {
+      console.log("alreadyAddedPhone", error.message);
+    }
+  };
+  const receiverCheckAddedPhone = async (receiverEmail) => {
+    try {
+      const q = query(
+        collection(db, "companions", userData.email, "personal_companions"),
+        where("phoneNumber", "==", userData.phoneNumber),
+        limit(1)
+      );
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        addCompanionToReceiver(receiverEmail);
+      } else if (!querySnapshot.empty) {
+        return;
+      }
+    } catch (error) {
+      console.log("receiverCheckAddedPhone", error.message);
+    }
+  };
+  const addCompanionToReceiver = async (receiverEmail) => {
+    try {
+      const receiverCompanion = {
+        nikname: userData.nikname,
+        photoUrl: userData.photoUrl,
+        phoneNumber: userData.phoneNumber,
+        email: userData.email,
+        timestamp: serverTimestamp(),
+      };
+      await addDoc(collection(db, "companions", receiverEmail, "personal_companions"), receiverCompanion);
+      createChatRoom(receiverEmail);
+    } catch (error) {
+      console.log("addCompanionToReceiver", error.message);
+    }
+  };
+  const createChatRoom = async (receiverEmail) => {
+    const chatRoomData = {
+      participants: [receiverEmail, currentUserEmail],
+    };
+    try {
+      await addDoc(collection(db, "chatRoomsParticipants"), chatRoomData);
+    } catch (error) {
+      console.log("createChatRoom", error.message);
+    }
   };
   const checkUser = async () => {
     if (!checkPhoneNumber()) {
@@ -94,6 +140,7 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
       }
       if (!querySnapshot.empty) {
         const docSnap = querySnapshot.docs[0];
+        const receiverEmail = docSnap.data().email;
         const companion = {
           nikname: docSnap.data().nikname,
           photoUrl: docSnap.data().photoUrl,
@@ -101,8 +148,11 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
           email: docSnap.data().email,
           timestamp: serverTimestamp(),
         };
-        await setDoc(doc(db, "companions", authFirebase.currentUser.email, "personal_companions", phone), companion);
+        await addDoc(collection(db, "companions", authFirebase.currentUser.email, "personal_companions"), companion, {
+          merge: true,
+        });
         Alert.alert("You add a companion");
+        receiverCheckAddedPhone(receiverEmail);
         setPhone("");
         setModalAddCompanion(false);
       }
@@ -146,10 +196,22 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
           ></PhoneSignInInput>
-          <PhoneSignInBtn onPress={() => checkUser()}>
-            <PhoneSignInBtnText>Check</PhoneSignInBtnText>
-          </PhoneSignInBtn>
         </BlockInput>
+        <PhoneSignInBtn
+          onPress={() => {
+            alreadyAddedPhone();
+          }}
+        >
+          <PhoneSignInBtnText>Check phone</PhoneSignInBtnText>
+        </PhoneSignInBtn>
+        <PhoneSignInBtn
+          onPress={() => {
+            setPhone("");
+            setModalAddCompanion(false);
+          }}
+        >
+          <PhoneSignInBtnText>Cencel</PhoneSignInBtnText>
+        </PhoneSignInBtn>
       </LinearGradient>
     </BlockAddCompanion>
   );

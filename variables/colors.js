@@ -18,3 +18,7 @@ export const ProfileIcon = "#274d60";
 export const ProfileIconBackground = "#6ba3be";
 export const ProfileImageBackground = "#6ba3be";
 export const AddCompanionTitle = "whitesmoke";
+export const DashCompaniomBlockBackgroundColor = "#6ba3be";
+export const MessageScreenGoBackBackground = "#6ba3be";
+export const MessageScreenGoBackIconColor = "whitesmoke";
+export const MessageScreenTitleColor = "whitesmoke";

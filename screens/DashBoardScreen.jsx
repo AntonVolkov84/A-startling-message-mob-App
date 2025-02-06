@@ -1,11 +1,11 @@
-import { View, Text, Button, TouchableOpacity, Image, Alert } from "react-native";
+import { View, Text, Button, TouchableOpacity, Image, Alert, FlatList, SafeAreaView } from "react-native";
 import { getAuth } from "firebase/auth";
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import * as colors from "../variables/colors.js";
 import { LinearGradient } from "expo-linear-gradient";
 import Footer from "../components/Footer.jsx";
-import { doc, onSnapshot } from "firebase/firestore";
+import { collection, doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebaseConfig.js";
 import ModalNikname from "../components/ModalNikname.jsx";
 import Profile from "../components/Profile.jsx";
@@ -20,20 +20,51 @@ const BlockDashboard = styled.View`
   padding-left: 5%;
   padding-right: 5%;
 `;
+const BlockFlatList = styled.FlatList`
+  margin-top: 7%;
+  width: 100%;
+`;
+const BlockCompanion = styled.TouchableOpacity`
+  background-color: ${colors.DashCompaniomBlockBackgroundColor};
+  width: 100%;
+  height: 50px;
+  border-radius: 15px;
+  padding-left: 15px;
+  align-items: center;
+  flex-direction: row;
+  margin-bottom: 5px;
+  gap: 10px;
+`;
+const CompanionAvatar = styled.Image`
+  height: 90%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 20px;
+`;
+const CompanionName = styled.Text``;
+const CompanionPhone = styled.Text``;
 
 const FooterView = styled.View`
   height: 7%;
 `;
 
-export default function DashBoardScreen() {
+export default function DashBoardScreen({ navigation }) {
   const [modalProfile, setModalProfile] = useState(false);
   const [modalChangeNikname, setModalChangeNikname] = useState(false);
   const [modalAddCompanion, setModalAddCompanion] = useState(false);
   const [userData, setUserData] = useState();
+  const [companionsData, setCompanionsData] = useState();
+  const [companionsDataLoading, setCompanionsDataLoading] = useState(true);
   const authFirebase = getAuth();
   useEffect(() => {
     onSnapshot(doc(db, "users", authFirebase.currentUser.email), (snapshot) => {
       setUserData(snapshot.data());
+    });
+  }, []);
+  useEffect(() => {
+    onSnapshot(collection(db, "companions", authFirebase.currentUser.email, "personal_companions"), (snapshot) => {
+      setCompanionsData(snapshot.docs.map((doc) => ({ docId: doc.id, ...doc.data() })));
+      setCompanionsDataLoading(false);
     });
   }, []);
 
@@ -56,16 +87,25 @@ export default function DashBoardScreen() {
         </>
       ) : (
         <BlockDashboard>
-          <Text>
-            Lorem ipsum dolor sit, amet consectetur adipisicing elit. Laborum amet exercitationem perspiciatis
-            laudantium architecto. Id aspernatur itaque quibusdam exercitationem accusamus voluptates, est sit rerum nam
-            suscipit possimus sunt nemo ratione. Lorem ipsum dolor sit amet consectetur adipisicing elit. Labore
-            assumenda rerum consectetur deleniti provident magnam excepturi ex aut quae blanditiis fugit quo quos, fuga
-            saepe vitae dicta. Temporibus, quia doloribus.
-          </Text>
+          {companionsDataLoading ? (
+            <Text>Loading ...</Text>
+          ) : (
+            <SafeAreaView style={{ width: "100%", height: "100%" }}>
+              <BlockFlatList
+                data={companionsData}
+                renderItem={({ item }) => (
+                  <BlockCompanion onPress={() => navigation.navigate("MessageScreen", { item })}>
+                    <CompanionAvatar source={{ uri: item.photoUrl }}></CompanionAvatar>
+                    <CompanionName>{item.nikname}</CompanionName>
+                    <CompanionPhone>{item.phoneNumber}</CompanionPhone>
+                  </BlockCompanion>
+                )}
+                keyExtractor={(index) => index}
+              />
+            </SafeAreaView>
+          )}
         </BlockDashboard>
       )}
-
       <FooterView>
         <Footer
           setModalProfile={setModalProfile}
