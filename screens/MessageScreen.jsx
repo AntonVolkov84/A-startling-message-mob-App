@@ -66,7 +66,8 @@ export default function MessageScreen({ route, navigation }) {
   const currentUserEmail = auth.currentUser.email;
   const receiverEmail = item.email;
   const flatList = React.useRef(null);
-  console.log("messagesData", messagesData);
+  const currentUserUID = auth.currentUser.uid;
+
   const findChat = async () => {
     const chatQuery = await getDocs(
       query(collection(db, "chatRoomsParticipants"), where("participants", "array-contains", currentUserEmail))
@@ -88,8 +89,11 @@ export default function MessageScreen({ route, navigation }) {
         timestamp: serverTimestamp(),
         participants: [currentUserEmail, receiverEmail],
         doNotRead: receiverEmail,
+        autorUID: currentUserUID,
+        autor: currentUserEmail,
       };
       await addDoc(collection(db, "chatRooms", chatId, "messages"), data);
+      setMessageText("");
     } catch (error) {
       console.log("sendMessage", error.message);
     }
@@ -133,7 +137,17 @@ export default function MessageScreen({ route, navigation }) {
     >
       <BlockMessageScreen>
         <MessageTitle>Messages</MessageTitle>
-        <MessagesFlatList ref={flatList}></MessagesFlatList>
+        {messagesDataLoading ? (
+          <MessagesFlatList></MessagesFlatList>
+        ) : (
+          <MessagesFlatList
+            ref={flatList}
+            data={messagesData}
+            renderItem={({ item }) => <Message item={item}></Message>}
+            keyExtractor={(index) => index}
+          ></MessagesFlatList>
+        )}
+
         <InputBlock>
           <GoBackBlock onPress={() => navigation.navigate("Dashboard")}>
             <AntDesign name="back" size={30} color={colors.MessageScreenGoBackIconColor} />

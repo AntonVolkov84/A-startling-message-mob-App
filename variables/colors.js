@@ -22,3 +22,5 @@ export const DashCompaniomBlockBackgroundColor = "#6ba3be";
 export const MessageScreenGoBackBackground = "#6ba3be";
 export const MessageScreenGoBackIconColor = "whitesmoke";
 export const MessageScreenTitleColor = "whitesmoke";
+export const MessageBackgroundColor = "#6ba3be";
+export const MessageBackgroundColorWithAuthor = "#33deb0";
