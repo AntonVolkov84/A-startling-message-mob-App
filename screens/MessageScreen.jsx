@@ -9,6 +9,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { addDoc, collection, getDocs, where, query, serverTimestamp, onSnapshot, orderBy } from "firebase/firestore";
 import { db, app } from "../firebaseConfig.js";
 import { getAuth } from "firebase/auth";
+import * as Location from "expo-location";
 
 const BlockMessageScreen = styled.View`
   width: 100%;
@@ -81,8 +82,21 @@ export default function MessageScreen({ route, navigation }) {
     });
     return foundChatId;
   };
-
+  // useEffect(() => {
+  //   Location.watchPositionAsync(
+  //     {
+  //       accuracy: Location.Accuracy.High,
+  //       timeInterval: 10000, // обновление каждые 10 секунд
+  //       distanceInterval: 50, // обновление при изменении на 50 метров
+  //     },
+  //     (newLocation) => {
+  //       console.log("Interval", newLocation);
+  //     }
+  //   );
+  // }, []);
   const sendMessage = async () => {
+    let loc = await Location.getCurrentPositionAsync({});
+    console.log(loc);
     try {
       const data = {
         text: messageText,
@@ -91,6 +105,7 @@ export default function MessageScreen({ route, navigation }) {
         doNotRead: receiverEmail,
         autorUID: currentUserUID,
         autor: currentUserEmail,
+        location: loc,
       };
       await addDoc(collection(db, "chatRooms", chatId, "messages"), data);
       setMessageText("");
@@ -144,7 +159,7 @@ export default function MessageScreen({ route, navigation }) {
             ref={flatList}
             data={messagesData}
             renderItem={({ item }) => <Message item={item}></Message>}
-            keyExtractor={(index) => index}
+            keyExtractor={(item, index) => index}
           ></MessagesFlatList>
         )}
 

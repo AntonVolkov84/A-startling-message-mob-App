@@ -32,7 +32,8 @@
     "react-native-safe-area-context": "^5.1.0",
     "react-native-screens": "^4.5.0",
     "react-native-webview": "^13.12.5",
-    "styled-components": "^6.1.14"
+    "styled-components": "^6.1.14",
+    "expo-location": "~18.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

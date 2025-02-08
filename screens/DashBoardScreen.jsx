@@ -57,15 +57,24 @@ export default function DashBoardScreen({ navigation }) {
   const [companionsDataLoading, setCompanionsDataLoading] = useState(true);
   const authFirebase = getAuth();
   useEffect(() => {
-    onSnapshot(doc(db, "users", authFirebase.currentUser.email), (snapshot) => {
+    const unsubscribe = onSnapshot(doc(db, "users", authFirebase.currentUser.email), (snapshot) => {
       setUserData(snapshot.data());
     });
+    return () => {
+      unsubscribe();
+    };
   }, []);
   useEffect(() => {
-    onSnapshot(collection(db, "companions", authFirebase.currentUser.email, "personal_companions"), (snapshot) => {
-      setCompanionsData(snapshot.docs.map((doc) => ({ docId: doc.id, ...doc.data() })));
-      setCompanionsDataLoading(false);
-    });
+    const unsubscribe = onSnapshot(
+      collection(db, "companions", authFirebase.currentUser.email, "personal_companions"),
+      (snapshot) => {
+        setCompanionsData(snapshot.docs.map((doc) => ({ docId: doc.id, ...doc.data() })));
+        setCompanionsDataLoading(false);
+      }
+    );
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   return (

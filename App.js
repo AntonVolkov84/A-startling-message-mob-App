@@ -9,15 +9,30 @@ import RegistrationScreen from "./screens/RegistrationScreen";
 import DashBoardScreen from "./screens/DashBoardScreen";
 import { getAuth, onAuthStateChanged as onFirebaseAuthStateChanged } from "firebase/auth";
 import MessageScreen from "./screens/MessageScreen";
+import * as Location from "expo-location";
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [user, setUser] = useState("");
+  const [errorMsg, setErrorMsg] = useState(null);
   const firebaseAuth = getAuth();
   useEffect(() => {
     customNavigationBar();
   });
+
+  useEffect(() => {
+    async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
+        if (errorMsg) {
+          console.log("location from App", errorMsg);
+        }
+        return;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const unsubscribeFirebaseAuth = onFirebaseAuthStateChanged(firebaseAuth, (firebaseUser) => {
@@ -31,7 +46,7 @@ export default function App() {
     return () => {
       unsubscribeFirebaseAuth();
     };
-  }, []);
+  }, [firebaseAuth]);
   const customNavigationBar = async () => {
     await NavigationBar.setBackgroundColorAsync("#1E2322");
     await NavigationBar.setButtonStyleAsync("light");

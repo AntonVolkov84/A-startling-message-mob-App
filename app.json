@@ -2,7 +2,7 @@
   "expo": {
     "name": "astartlingmessage",
     "slug": "astartlingmessage",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -34,6 +34,12 @@
     "plugins": [
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow A startling message to use your location."
+        }
+      ],
       [
         "expo-font",
         {

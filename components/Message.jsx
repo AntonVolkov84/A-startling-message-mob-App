@@ -51,11 +51,13 @@ export default function Message({ item }) {
     });
     return () => unsubscribe();
   }, []);
+
   useEffect(() => {
     if (currentUserEmail === autorEmail) {
       setIsAythorCurrentUser(true);
     }
   }, []);
+
   return (
     <>
       {userData ? (
@@ -70,7 +72,11 @@ export default function Message({ item }) {
           }}
         >
           <BlockAutor>
-            <MessageAvatarBlock source={{ uri: userData.photoUrl }}></MessageAvatarBlock>
+            <MessageAvatarBlock
+              source={{
+                uri: userData.photoUrl,
+              }}
+            ></MessageAvatarBlock>
             <MessageNameBlockText>{userData.nikname}</MessageNameBlockText>
           </BlockAutor>
           <BoxForMessage>
