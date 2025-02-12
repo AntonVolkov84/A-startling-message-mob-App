@@ -7,6 +7,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig.js";
 import Entypo from "@expo/vector-icons/Entypo";
 import * as ImagePicker from "expo-image-picker";
+import axios from "axios";
 
 const BlockDashboardProfile = styled.View`
   width: 100%;
@@ -104,16 +105,46 @@ export default function Profile({ setModalChangeNikname, userData }) {
     });
     if (result) {
       const uriForStorage = result.assets[0].uri;
+      const fileName = result.assets[0].uri.split("/").pop();
+      const fileData = new FormData();
+      fileData.append("file", {
+        uri: uriForStorage,
+        name: fileName,
+        type: "image/png",
+      });
       setNewPhotoURL(uriForStorage);
-      updateWithNewPhotoUrl();
+      const fileForFirebase = await uploadImageToStore(uriForStorage, fileName);
+      console.log(fileForFirebase);
+      updateWithNewPhotoUrl(fileForFirebase);
     }
   };
-  const updateWithNewPhotoUrl = async () => {
-    if (newPhotoURL.length < 1) {
-      return Alert.alert("Something wrong with your photo");
+
+  const uploadImageToStore = async (uriForStorage, fileName) => {
+    const apiUrl = "https://api.cloudinary.com/v1_1/dzzkzubs0/image/upload";
+    const data = new FormData();
+    try {
+      data.append("file", {
+        uri: uriForStorage,
+        type: "image/png",
+        name: fileName,
+      });
+      data.append("upload_preset", "A startling message");
+      const response = await axios.post(apiUrl, data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const responseUrl = response.data.secure_url;
+      return responseUrl;
+    } catch (error) {
+      console.error("Error uploading image:", error);
     }
+  };
+
+  const updateWithNewPhotoUrl = async (fileForFirebase) => {
     const userRef = doc(db, "users", authFirebase.currentUser.email);
-    await setDoc(userRef, { photoUrl: newPhotoURL }, { merge: true });
+    await setDoc(userRef, { photoUrl: fileForFirebase }, { merge: true });
   };
 
   return (
@@ -175,7 +206,7 @@ export default function Profile({ setModalChangeNikname, userData }) {
           <ProfileInfoLine></ProfileInfoLine>
           <BlockImage onPress={() => pickImage()}>
             {newPhotoURL ? (
-              <Image source={{ uri: newPhotoURL }} style={{ aspectRatio: 1, height: "100%" }} />
+              <Image source={{ uri: userDataPhotoUrl || newPhotoURL }} style={{ aspectRatio: 1, height: "100%" }} />
             ) : (
               <>
                 {userDataPhotoUrl ? (

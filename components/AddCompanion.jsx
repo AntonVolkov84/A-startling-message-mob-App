@@ -78,7 +78,7 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
       if (querySnapshot.empty) {
         checkUser();
       } else if (!querySnapshot.empty) {
-        Alert.alert("This companiom already exist");
+        Alert.alert("This companion already exist");
         return true;
       }
     } catch (error) {
@@ -142,8 +142,6 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
         const docSnap = querySnapshot.docs[0];
         const receiverEmail = docSnap.data().email;
         const companion = {
-          nikname: docSnap.data().nikname,
-          photoUrl: docSnap.data().photoUrl,
           phoneNumber: docSnap.data().phoneNumber,
           email: docSnap.data().email,
           timestamp: serverTimestamp(),

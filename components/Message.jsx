@@ -10,7 +10,6 @@ const BlockMessage = styled.View`
   width: 70%;
   height: fit-content;
   padding-top: 5px;
-  padding-left: 5px;
   padding-right: 5px;
   border-radius: 5px;
   flex-direction: row;
@@ -63,6 +62,7 @@ export default function Message({ item }) {
       {userData ? (
         <BlockMessage
           style={{
+            paddingLeft: isAuthorCurrentUser ? 15 : 5,
             backgroundColor: isAuthorCurrentUser
               ? colors.MessageBackgroundColorWithAuthor
               : colors.MessageBackgroundColor,
