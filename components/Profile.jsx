@@ -8,6 +8,7 @@ import { db } from "../firebaseConfig.js";
 import Entypo from "@expo/vector-icons/Entypo";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
+import * as Crypto from "expo-crypto";
 
 const BlockDashboardProfile = styled.View`
   width: 100%;
@@ -78,6 +79,7 @@ export default function Profile({ setModalChangeNikname, userData }) {
   const [userDataPhotoUrl, setUserDataPhotoUrl] = useState();
   const [newPhotoURL, setNewPhotoURL] = useState();
   const authFirebase = getAuth();
+  const fileForDelFromStorage = userData.fileForDel;
 
   useEffect(() => {
     if (userData) {
@@ -100,7 +102,7 @@ export default function Profile({ setModalChangeNikname, userData }) {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
-      aspect: [4, 3],
+      aspect: [4, 4],
       quality: 1,
     });
     if (result) {
@@ -113,12 +115,32 @@ export default function Profile({ setModalChangeNikname, userData }) {
         type: "image/png",
       });
       setNewPhotoURL(uriForStorage);
-      const fileForFirebase = await uploadImageToStore(uriForStorage, fileName);
-      console.log(fileForFirebase);
-      updateWithNewPhotoUrl(fileForFirebase);
+      const { responseUrl, public_id } = await uploadImageToStore(uriForStorage, fileName);
+
+      updateWithNewPhotoUrl(responseUrl, public_id);
     }
   };
+  const deleteFileFromStorage = async () => {
+    if (fileForDelFromStorage) {
+      try {
+        const apiUrl = "https://api.cloudinary.com/v1_1/dzzkzubs0/image/destroy";
+        const data = {
+          public_id: fileForDelFromStorage,
+          api_key: process.env.EXPO_PUBLIC_APPLICATION_KEY_ID,
+          timestamp: Math.floor(Date.now() / 1000),
+        };
+        const stringToSign = `public_id=${data.public_id}&timestamp=${data.timestamp}${process.env.EXPO_PUBLIC_APPLICATION_KEY_SECRET}`;
+        const signature = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA1, stringToSign);
+        data.signature = signature;
 
+        const response = await axios.post(apiUrl, data);
+      } catch (error) {
+        console.log("deleteFileFromStorage", error.message);
+      }
+    } else {
+      return;
+    }
+  };
   const uploadImageToStore = async (uriForStorage, fileName) => {
     const apiUrl = "https://api.cloudinary.com/v1_1/dzzkzubs0/image/upload";
     const data = new FormData();
@@ -134,17 +156,21 @@ export default function Profile({ setModalChangeNikname, userData }) {
           "Content-Type": "multipart/form-data",
         },
       });
+      const { public_id } = response.data;
 
       const responseUrl = response.data.secure_url;
-      return responseUrl;
+      if (responseUrl) {
+        deleteFileFromStorage();
+      }
+      return { responseUrl, public_id };
     } catch (error) {
       console.error("Error uploading image:", error);
     }
   };
 
-  const updateWithNewPhotoUrl = async (fileForFirebase) => {
+  const updateWithNewPhotoUrl = async (fileForFirebase, public_id) => {
     const userRef = doc(db, "users", authFirebase.currentUser.email);
-    await setDoc(userRef, { photoUrl: fileForFirebase }, { merge: true });
+    await setDoc(userRef, { photoUrl: fileForFirebase, fileForDel: public_id }, { merge: true });
   };
 
   return (

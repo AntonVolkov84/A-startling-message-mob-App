@@ -15,7 +15,7 @@ const PhoneSignIn = styled.View`
 `;
 const BlockPhoneSignIn = styled.View`
   width: 100%;
-  height: 71%;
+  height: 82%;
   align-items: center;
 `;
 const PhoneSignInTitle = styled.Text`
@@ -48,10 +48,9 @@ const PhoneSignInBtnText = styled.Text`
   font-size: 20px;
 `;
 const BtnGoBack = styled.TouchableOpacity`
+  /* margin-top: 15px; */
   align-items: center;
   justify-content: center;
-  position: absolute;
-  bottom: 15%;
   width: 100%;
 `;
 const BtnGoBackText = styled.Text`

@@ -1,5 +1,5 @@
 import { View, Text, Image } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import styled from "styled-components";
 import * as colors from "../variables/colors.js";
 import { doc, onSnapshot } from "firebase/firestore";
@@ -37,7 +37,7 @@ const MessageNameBlockText = styled.Text`
   font-size: 10px;
   text-align: center;
 `;
-export default function Message({ item }) {
+export default memo(function Message({ item }) {
   const [userData, setUserData] = useState(null);
   const [isAuthorCurrentUser, setIsAythorCurrentUser] = useState(false);
   const auth = getAuth();
@@ -86,4 +86,4 @@ export default function Message({ item }) {
       ) : null}
     </>
   );
-}
+});

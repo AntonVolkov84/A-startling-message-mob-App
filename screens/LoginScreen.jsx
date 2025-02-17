@@ -1,12 +1,22 @@
-import React, { useState } from "react";
-import { Text, View, TouchableOpacity, TextInput } from "react-native";
+import React, { useState, useEffect } from "react";
+import { Text, View, TouchableOpacity, Image, TextInput } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as colors from "../variables/colors.js";
 import styled from "styled-components";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import Animated, {
+  Easing,
+  withSequence,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
+
 const ButtonRegistration = styled.TouchableOpacity`
   justify-content: center;
   align-items: center;
+  margin-top: 40px;
 `;
 const ButtonRegistrationText = styled.Text`
   font-size: 20px;
@@ -18,6 +28,13 @@ const BlockLogIn = styled.View`
   height: 50%;
   align-items: center;
   justify-content: center;
+`;
+const AnimatedView = styled.View`
+  width: 30%;
+  height: 30%;
+  justify-content: center;
+  align-items: center;
+  z-index: 3;
 `;
 const LogInInput = styled.TextInput`
   width: 70%;
@@ -41,10 +58,51 @@ const LogInBtnText = styled.Text`
   color: ${colors.PhoneSignInText};
   font-size: 20px;
 `;
+const Smile = styled.Image`
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+`;
 function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const auth = getAuth();
+  const bounceValue = useSharedValue(1);
+  const translateXValue = useSharedValue(0);
+  useEffect(() => {
+    const animate = () => {
+      bounceValue.value = withRepeat(
+        withSequence(
+          withTiming(1.3, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.3, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 600, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1, // -1 означает бесконечное повторение
+        false // не зеркально (не чередовать)
+      );
+
+      translateXValue.value = withRepeat(
+        withSequence(
+          withTiming(-30, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+          withTiming(30, { duration: 600, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0, { duration: 600, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1, // -1 означает бесконечное повторение
+        false // не зеркально (не чередовать)
+      );
+    };
+
+    animate();
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: bounceValue.value }, { translateX: translateXValue.value }],
+    };
+  });
+
   const LogInWithEmail = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -53,6 +111,7 @@ function LoginScreen({ navigation }) {
       console.log("LogInWithEmail", error.message);
     }
   };
+
   return (
     <LinearGradient
       colors={[
@@ -66,6 +125,11 @@ function LoginScreen({ navigation }) {
       style={{ height: "100%", width: "100%", paddingTop: "5%" }}
     >
       <BlockLogIn>
+        <AnimatedView>
+          <Animated.View style={animatedStyle}>
+            <Smile source={require("../assets/smile.png")} />
+          </Animated.View>
+        </AnimatedView>
         <LogInInput placeholder="Email" value={email} inputMode="email" onChangeText={setEmail}></LogInInput>
         <LogInInput
           placeholder="Come up with password"

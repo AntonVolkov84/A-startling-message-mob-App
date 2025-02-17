@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, FlatList } from "react-native";
+import { Keyboard, View, Text, TouchableOpacity, FlatList } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import * as colors from "../variables/colors.js";
@@ -66,7 +66,7 @@ export default function MessageScreen({ route, navigation }) {
   const auth = getAuth();
   const currentUserEmail = auth.currentUser.email;
   const receiverEmail = item.email;
-  const flatList = React.useRef(null);
+  const flatList = useRef(null);
   const currentUserUID = auth.currentUser.uid;
 
   const findChat = async () => {
@@ -82,6 +82,23 @@ export default function MessageScreen({ route, navigation }) {
     });
     return foundChatId;
   };
+
+  // const markMessagesAsRead = async () => {
+  //   const refForChangeMessageStatus = query(
+  //     collection(db, "messages", conversationId, "conversation"),
+  //     where("doNotReadBy", "array-contains", currentEmail)
+  //   );
+  //   const unreadMessages = await getDocs(refForChangeMessageStatus);
+  //   const docForUpdate = [];
+  //   unreadMessages.forEach(async (document) => {
+  //     docForUpdate.push(document.id);
+  //   });
+  //   docForUpdate.forEach(async (id) => {
+  //     const messageRef = doc(db, "messages", conversationId, "conversation", id);
+  //     await updateDoc(messageRef, { doNotReadBy: arrayRemove(currentEmail) });
+  //   });
+  // };
+
   // useEffect(() => {
   //   Location.watchPositionAsync(
   //     {
@@ -95,8 +112,7 @@ export default function MessageScreen({ route, navigation }) {
   //   );
   // }, []);
   const sendMessage = async () => {
-    let loc = await Location.getCurrentPositionAsync({});
-    console.log(loc);
+    let location = await Location.getCurrentPositionAsync({});
     try {
       const data = {
         text: messageText,
@@ -105,7 +121,7 @@ export default function MessageScreen({ route, navigation }) {
         doNotRead: receiverEmail,
         autorUID: currentUserUID,
         autor: currentUserEmail,
-        location: loc,
+        location,
       };
       await addDoc(collection(db, "chatRooms", chatId, "messages"), data);
       setMessageText("");
@@ -156,6 +172,8 @@ export default function MessageScreen({ route, navigation }) {
           <MessagesFlatList></MessagesFlatList>
         ) : (
           <MessagesFlatList
+            onScroll={() => Keyboard.dismiss()}
+            onContentSizeChange={scrollToEnd}
             ref={flatList}
             data={messagesData}
             renderItem={({ item }) => <Message item={item}></Message>}

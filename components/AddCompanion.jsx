@@ -88,7 +88,7 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
   const receiverCheckAddedPhone = async (receiverEmail) => {
     try {
       const q = query(
-        collection(db, "companions", userData.email, "personal_companions"),
+        collection(db, "companions", receiverEmail, "personal_companions"),
         where("phoneNumber", "==", userData.phoneNumber),
         limit(1)
       );
@@ -102,22 +102,20 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
       console.log("receiverCheckAddedPhone", error.message);
     }
   };
+
   const addCompanionToReceiver = async (receiverEmail) => {
     try {
       const receiverCompanion = {
-        nikname: userData.nikname,
-        photoUrl: userData.photoUrl,
         phoneNumber: userData.phoneNumber,
         email: userData.email,
         timestamp: serverTimestamp(),
       };
       await addDoc(collection(db, "companions", receiverEmail, "personal_companions"), receiverCompanion);
-      createChatRoom(receiverEmail);
     } catch (error) {
       console.log("addCompanionToReceiver", error.message);
     }
   };
-  const createChatRoom = async (receiverEmail) => {
+  const createChatRoomParticipants = async (receiverEmail) => {
     const chatRoomData = {
       participants: [receiverEmail, currentUserEmail],
     };
@@ -150,7 +148,8 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
           merge: true,
         });
         Alert.alert("You add a companion");
-        receiverCheckAddedPhone(receiverEmail);
+        await createChatRoomParticipants(receiverEmail);
+        await receiverCheckAddedPhone(receiverEmail);
         setPhone("");
         setModalAddCompanion(false);
       }

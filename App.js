@@ -22,7 +22,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    async () => {
+    const requestLocationPermission = async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setErrorMsg("Permission to access location was denied");
@@ -32,6 +32,7 @@ export default function App() {
         return;
       }
     };
+    requestLocationPermission();
   }, []);
 
   useEffect(() => {

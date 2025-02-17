@@ -10,6 +10,7 @@ import { db } from "../firebaseConfig.js";
 import ModalNikname from "../components/ModalNikname.jsx";
 import Profile from "../components/Profile.jsx";
 import AddCompanion from "../components/AddCompanion.jsx";
+import DashboardCompanion from "../components/DashboardCompanion.jsx";
 
 const BlockDashboard = styled.View`
   width: 100%;
@@ -20,9 +21,30 @@ const BlockDashboard = styled.View`
   padding-left: 5%;
   padding-right: 5%;
 `;
-const BlockFlatList = styled.FlatList`
-  margin-top: 7%;
+const BlockLogo = styled.View`
+  margin-top: 18%;
   width: 100%;
+  height: 50px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+`;
+const LogoIcon = styled.Image`
+  width: 45px;
+  aspect-ratio: 1;
+  object-fit: cover;
+`;
+const LogoTitle = styled.Text`
+  font-size: 20px;
+  color: ${colors.DashLogoText};
+  width: 70%;
+  font-family: "Playwrite";
+  margin-left: 5px;
+`;
+const BlockFlatList = styled.FlatList`
+  margin-top: 2%;
+  width: 100%;
+  margin-bottom: 65px;
 `;
 const BlockCompanion = styled.TouchableOpacity`
   background-color: ${colors.DashCompaniomBlockBackgroundColor};
@@ -35,15 +57,6 @@ const BlockCompanion = styled.TouchableOpacity`
   margin-bottom: 5px;
   gap: 10px;
 `;
-const CompanionAvatar = styled.Image`
-  height: 90%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: 20px;
-`;
-const CompanionName = styled.Text``;
-const CompanionPhone = styled.Text``;
-
 const FooterView = styled.View`
   height: 7%;
 `;
@@ -56,6 +69,7 @@ export default function DashBoardScreen({ navigation }) {
   const [companionsData, setCompanionsData] = useState();
   const [companionsDataLoading, setCompanionsDataLoading] = useState(true);
   const authFirebase = getAuth();
+
   useEffect(() => {
     const unsubscribe = onSnapshot(doc(db, "users", authFirebase.currentUser.email), (snapshot) => {
       setUserData(snapshot.data());
@@ -96,20 +110,22 @@ export default function DashBoardScreen({ navigation }) {
         </>
       ) : (
         <BlockDashboard>
+          <BlockLogo>
+            <LogoIcon source={require("../assets/smileWithHand.png")}></LogoIcon>
+            <LogoTitle>A startling message</LogoTitle>
+          </BlockLogo>
           {companionsDataLoading ? (
-            <Text>Loading ...</Text>
+            <Text style={{ textAlign: "center" }}>Loading ...</Text>
           ) : (
             <SafeAreaView style={{ width: "100%", height: "100%" }}>
               <BlockFlatList
                 data={companionsData}
                 renderItem={({ item }) => (
                   <BlockCompanion onPress={() => navigation.navigate("MessageScreen", { item })}>
-                    <CompanionAvatar source={{ uri: item.photoUrl }}></CompanionAvatar>
-                    <CompanionName>{item.nikname}</CompanionName>
-                    <CompanionPhone>{item.phoneNumber}</CompanionPhone>
+                    <DashboardCompanion item={item} />
                   </BlockCompanion>
                 )}
-                keyExtractor={(index) => index}
+                keyExtractor={(item) => item.docId}
               />
             </SafeAreaView>
           )}
