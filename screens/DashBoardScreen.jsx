@@ -11,6 +11,7 @@ import ModalNikname from "../components/ModalNikname.jsx";
 import Profile from "../components/Profile.jsx";
 import AddCompanion from "../components/AddCompanion.jsx";
 import DashboardCompanion from "../components/DashboardCompanion.jsx";
+import i18next from "i18next";
 
 const BlockDashboard = styled.View`
   width: 100%;
@@ -58,7 +59,7 @@ const BlockCompanion = styled.TouchableOpacity`
   gap: 10px;
 `;
 const FooterView = styled.View`
-  height: 7%;
+  height: 60px;
 `;
 
 export default function DashBoardScreen({ navigation }) {
@@ -69,6 +70,11 @@ export default function DashBoardScreen({ navigation }) {
   const [companionsData, setCompanionsData] = useState();
   const [companionsDataLoading, setCompanionsDataLoading] = useState(true);
   const authFirebase = getAuth();
+
+  useEffect(() => {
+    if (!userData) return;
+    i18next.changeLanguage(userData.language);
+  }, [userData]);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(doc(db, "users", authFirebase.currentUser.email), (snapshot) => {

@@ -1,4 +1,4 @@
-import { View, Text, Button, TouchableOpacity, Image, Alert } from "react-native";
+import { View, Text, Button, TouchableOpacity, FlatList, Image, Alert } from "react-native";
 import { getAuth, signOut } from "firebase/auth";
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
@@ -9,6 +9,10 @@ import Entypo from "@expo/vector-icons/Entypo";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import * as Crypto from "expo-crypto";
+import i18next from "i18next";
+import { LanguageResources } from "../i18next";
+import languageList from "../locales/languagesList.json";
+import { useTranslation } from "react-i18next";
 
 const BlockDashboardProfile = styled.View`
   width: 100%;
@@ -31,7 +35,7 @@ const ProfileInfoTitleText = styled.Text`
   width: 100%;
   height: 90%;
   color: ${colors.ProfileInfoText};
-  font-size: 40px;
+  font-size: 35px;
   text-align: center;
 `;
 const ProfileInfoLine = styled.View`
@@ -75,11 +79,42 @@ const BlockImageText = styled.Text`
   font-size: 30px;
   text-align: center;
 `;
+const BlockModalChangeLng = styled.View`
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  z-index: 3;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  background-color: ${colors.ProfileBackgroundLanguageColor};
+`;
+const ModalChangeLng = styled.TouchableOpacity`
+  height: 200px;
+  margin-top: 10%;
+`;
+const ModalChangeLngText = styled.Text`
+  font-size: 25px;
+  text-align: center;
+  color: ${colors.ProfileTextLanguageColor};
+`;
 export default function Profile({ setModalChangeNikname, userData }) {
   const [userDataPhotoUrl, setUserDataPhotoUrl] = useState();
   const [newPhotoURL, setNewPhotoURL] = useState();
+  const [modalChangeLng, setModalChangeLng] = useState(false);
   const authFirebase = getAuth();
   const fileForDelFromStorage = userData.fileForDel;
+  const { t } = useTranslation();
+
+  const changeLng = (lng) => {
+    i18next.changeLanguage(lng);
+    handleChangeLanguage(lng);
+    setModalChangeLng(false);
+  };
+  const handleChangeLanguage = async (lng) => {
+    const userRef = doc(db, "users", authFirebase.currentUser.email);
+    await setDoc(userRef, { language: lng }, { merge: true });
+  };
 
   useEffect(() => {
     if (userData) {
@@ -176,18 +211,30 @@ export default function Profile({ setModalChangeNikname, userData }) {
   return (
     <BlockDashboardProfile>
       <BlockProfileInfo>
+        {modalChangeLng ? (
+          <BlockModalChangeLng>
+            <FlatList
+              data={Object.keys(LanguageResources)}
+              renderItem={({ item }) => (
+                <ModalChangeLng onPress={() => changeLng(item)}>
+                  <ModalChangeLngText>{languageList[item].nativeName}</ModalChangeLngText>
+                </ModalChangeLng>
+              )}
+            />
+          </BlockModalChangeLng>
+        ) : null}
         <ProfileInfoTitle>
-          <ProfileInfoTitleText>Profile</ProfileInfoTitleText>
+          <ProfileInfoTitleText>{t("ProfileTitle")}</ProfileInfoTitleText>
         </ProfileInfoTitle>
         <ProfileInfo>
-          <ProfileInfoText>Email: </ProfileInfoText>
+          <ProfileInfoText>{t("ProfileEmail")} </ProfileInfoText>
 
-          <ProfileInfoText>{userData?.email || "Loading.."}</ProfileInfoText>
+          <ProfileInfoText>{userData?.email || t("Loading")}</ProfileInfoText>
 
           <ProfileInfoLine></ProfileInfoLine>
-          <ProfileInfoText>Nikname: </ProfileInfoText>
+          <ProfileInfoText>{t("ProfileNikname")} </ProfileInfoText>
           <BlockWithIcon>
-            <ProfileInfoText>{userData?.nikname || "Loading.."}</ProfileInfoText>
+            <ProfileInfoText>{userData?.nikname || t("Loading")}</ProfileInfoText>
             <Icon
               onPress={() => setModalChangeNikname(true)}
               style={{
@@ -206,14 +253,14 @@ export default function Profile({ setModalChangeNikname, userData }) {
             </Icon>
           </BlockWithIcon>
           <ProfileInfoLine></ProfileInfoLine>
-          <ProfileInfoText>Phone number: </ProfileInfoText>
-          <ProfileInfoText>{userData?.phoneNumber || "Loading.."}</ProfileInfoText>
+          <ProfileInfoText>{t("ProfilePhone")} </ProfileInfoText>
+          <ProfileInfoText>{userData?.phoneNumber || t("Loading")}</ProfileInfoText>
           <ProfileInfoLine></ProfileInfoLine>
-          <ProfileInfoText>Language: </ProfileInfoText>
+          <ProfileInfoText>{t("language")}: </ProfileInfoText>
           <BlockWithIcon>
-            <ProfileInfoText>{userData?.language || "Loading.."}</ProfileInfoText>
+            <ProfileInfoText>{userData?.language || t("Loading")}</ProfileInfoText>
             <Icon
-              onPress={() => console.log("future relise")}
+              onPress={() => setModalChangeLng(true)}
               style={{
                 shadowColor: "#000",
                 shadowOffset: {
@@ -238,7 +285,7 @@ export default function Profile({ setModalChangeNikname, userData }) {
                 {userDataPhotoUrl ? (
                   <Image source={{ uri: userDataPhotoUrl }} style={{ aspectRatio: 1, height: "100%" }} />
                 ) : (
-                  <BlockImageText>Press here to choose your avatar</BlockImageText>
+                  <BlockImageText>{t("ProfileAvatar")}</BlockImageText>
                 )}
               </>
             )}
@@ -247,7 +294,7 @@ export default function Profile({ setModalChangeNikname, userData }) {
       </BlockProfileInfo>
 
       <Button
-        title="SignOut"
+        title={t("ProfileSignOut")}
         onPress={() => {
           handleSignedOut();
         }}

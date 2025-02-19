@@ -1,0 +1,20 @@
+{
+  "language": "Language",
+  "Cancel": "Cancel",
+  "Loading": "Loading...",
+  "AddCompanionTitle": "Add companion",
+  "AddCompanionPhoneFormat": "Phone format: + 'country code' 'phone number'",
+  "AddCompanionPlaceholder": "Type phone for search",
+  "AddCompanionCheckphone": "Check phone",
+  "AddCompanionIsPhoneAlert": "Something wrong with format your phone",
+  "AddCompanionYourNumberAlert": "This is your number",
+  "AddCompanionAddCompanionAlert": "You add a companion",
+  "AddCompanionoUserAlert": "There is not users with this phone number",
+  "AddCompanionoAlreadyExistsAlert": "This companion already exist",
+  "ProfileTitle": "Profile",
+  "ProfileEmail": "Email:",
+  "ProfileNikname": "Nikname:",
+  "ProfilePhone": "Phone number:",
+  "ProfileAvatar": "Press here to choose your avatar",
+  "ProfileSignOut": "SignOut"
+}

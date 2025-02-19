@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { doc, addDoc, collection, getDocs, where, query, limit, serverTimestamp } from "firebase/firestore";
 import { db, app } from "../firebaseConfig.js";
 import { getAuth } from "firebase/auth";
+import { useTranslation } from "react-i18next";
 
 const BlockAddCompanion = styled.View`
   width: 100%;
@@ -63,6 +64,7 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
   const [isFocused, setIsFocused] = useState(false);
   const authFirebase = getAuth();
   const currentUserEmail = authFirebase.currentUser.email;
+  const { t } = useTranslation();
   const isPhone = (checkedPhone) => {
     var regex = /^\+\d{1,3}\d{11,14}$/;
     return regex.test(checkedPhone);
@@ -78,7 +80,7 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
       if (querySnapshot.empty) {
         checkUser();
       } else if (!querySnapshot.empty) {
-        Alert.alert("This companion already exist");
+        Alert.alert(`${t("AddCompanionoAlreadyExistsAlert")}`);
         return true;
       }
     } catch (error) {
@@ -134,7 +136,7 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
-        return Alert.alert("There is not users with this phone number");
+        return Alert.alert(`${t("AddCompanionoUserAlert")}`);
       }
       if (!querySnapshot.empty) {
         const docSnap = querySnapshot.docs[0];
@@ -147,7 +149,7 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
         await addDoc(collection(db, "companions", authFirebase.currentUser.email, "personal_companions"), companion, {
           merge: true,
         });
-        Alert.alert("You add a companion");
+        Alert.alert(`${t("AddCompanionAddCompanionAlert")}`);
         await createChatRoomParticipants(receiverEmail);
         await receiverCheckAddedPhone(receiverEmail);
         setPhone("");
@@ -159,10 +161,10 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
   };
   const checkPhoneNumber = () => {
     if (phone === userData.phoneNumber) {
-      return Alert.alert("This is your number");
+      return Alert.alert(`${t("AddCompanionYourNumberAlert")}`);
     } else {
       if (!isPhone(phone)) {
-        return Alert.alert("Something wrong with format your phone");
+        return Alert.alert(`${t("AddCompanionIsPhoneAlert")}`);
       } else {
         return true;
       }
@@ -182,12 +184,12 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
         style={{ height: "100%", width: "100%", paddingTop: "15%" }}
       >
         <AddCompanionTitle>
-          <AddCompanionTitleText>AddCompanion</AddCompanionTitleText>
+          <AddCompanionTitleText>{t("AddCompanionTitle")}</AddCompanionTitleText>
         </AddCompanionTitle>
         <BlockInput>
-          <Tooltip>{isFocused && <TooltipText>Phone format: + "country code" "phone number"</TooltipText>}</Tooltip>
+          <Tooltip>{isFocused && <TooltipText>{t("AddCompanionPhoneFormat")}</TooltipText>}</Tooltip>
           <PhoneSignInInput
-            placeholder="Type phone for search"
+            placeholder={t("AddCompanionPlaceholder")}
             value={phone}
             onChangeText={setPhone}
             onFocus={() => setIsFocused(true)}
@@ -199,7 +201,7 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
             alreadyAddedPhone();
           }}
         >
-          <PhoneSignInBtnText>Check phone</PhoneSignInBtnText>
+          <PhoneSignInBtnText>{t("AddCompanionCheckphone")}</PhoneSignInBtnText>
         </PhoneSignInBtn>
         <PhoneSignInBtn
           onPress={() => {
@@ -207,7 +209,7 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
             setModalAddCompanion(false);
           }}
         >
-          <PhoneSignInBtnText>Cencel</PhoneSignInBtnText>
+          <PhoneSignInBtnText>{t("Cancel")}</PhoneSignInBtnText>
         </PhoneSignInBtn>
       </LinearGradient>
     </BlockAddCompanion>

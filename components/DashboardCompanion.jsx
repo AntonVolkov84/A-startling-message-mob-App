@@ -5,6 +5,7 @@ import { db } from "../firebaseConfig.js";
 import { Ionicons } from "@expo/vector-icons";
 import * as colors from "../variables/colors.js";
 import { getAuth } from "firebase/auth";
+import { useTranslation } from "react-i18next";
 import { addDoc, doc, onSnapshot, collection, getDocs, where, query } from "firebase/firestore";
 
 const CompanionAvatar = styled.Image`
@@ -33,6 +34,7 @@ export default function DashboardCompanion({ item }) {
   const auth = getAuth();
   const currentUserEmail = auth.currentUser.email;
   const companionEmail = item.email;
+  const { t } = useTranslation();
 
   const findChat = async () => {
     const chatQuery = await getDocs(
@@ -94,7 +96,7 @@ export default function DashboardCompanion({ item }) {
           ) : null}
         </>
       ) : (
-        <Text>Loading ..</Text>
+        <Text>{t("Loading")}</Text>
       )}
     </>
   );

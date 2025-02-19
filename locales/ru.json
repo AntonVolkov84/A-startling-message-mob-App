@@ -1,0 +1,20 @@
+{
+  "language": "Язык",
+  "Cancel": "Отмена",
+  "Loading": "Загрузка...",
+  "AddCompanionTitle": "Добавить друга",
+  "AddCompanionPhoneFormat": "Формат номера: + 'код страны' 'номер телефона'",
+  "AddCompanionPlaceholder": "Укажите номер для поиска",
+  "AddCompanionCheckphone": "Искать номер",
+  "AddCompanionIsPhoneAlert": "Что-то не так с номером",
+  "AddCompanionYourNumberAlert": "Это твой номер!",
+  "AddCompanionAddCompanionAlert": "Вы добавили друга",
+  "AddCompanionoUserAlert": "Нет пользователя с таким номером",
+  "AddCompanionoAlreadyExistsAlert": "This companion already exist",
+  "ProfileTitle": "Профиль",
+  "ProfileEmail": "Почта:",
+  "ProfileNikname": "Ник:",
+  "ProfilePhone": "Номер телефона:",
+  "ProfileAvatar": "Нажмите сюда, чтобы выбрать аватар",
+  "ProfileSignOut": "Выйти"
+}

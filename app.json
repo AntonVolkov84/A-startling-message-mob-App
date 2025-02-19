@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "astartlingmessage",
+    "name": "A Startling Message",
     "slug": "astartlingmessage",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "orientation": "portrait",
     "icon": "./assets/smile.png",
     "userInterfaceStyle": "light",
@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/smile.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0d0d0d"
     },
     "ios": {
       "supportsTablet": true
@@ -19,7 +19,7 @@
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/smile.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0d0d0d"
       },
       "package": "com.ant_volkov.astartlingmessage"
     },
