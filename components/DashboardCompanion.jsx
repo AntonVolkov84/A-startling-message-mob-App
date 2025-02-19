@@ -1,12 +1,11 @@
 import { View, Text } from "react-native";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebaseConfig.js";
 import { Ionicons } from "@expo/vector-icons";
 import * as colors from "../variables/colors.js";
 import { getAuth } from "firebase/auth";
-import { addDoc, collection, getDocs, where, query, serverTimestamp, orderBy } from "firebase/firestore";
+import { addDoc, doc, onSnapshot, collection, getDocs, where, query } from "firebase/firestore";
 
 const CompanionAvatar = styled.Image`
   height: 90%;
@@ -34,7 +33,6 @@ export default function DashboardCompanion({ item }) {
   const auth = getAuth();
   const currentUserEmail = auth.currentUser.email;
   const companionEmail = item.email;
-  console.log(chatId);
 
   const findChat = async () => {
     const chatQuery = await getDocs(
@@ -49,6 +47,30 @@ export default function DashboardCompanion({ item }) {
     });
     return foundChatId;
   };
+
+  useEffect(() => {
+    if (!chatId) return;
+    const unsubscribe = onSnapshot(
+      query(collection(db, "chatRooms", chatId, "messages")),
+      where("doNotRead", "==", currentUserEmail),
+      (snapshot) => {
+        if (!snapshot.empty) {
+          let unreadMessagesExist = false;
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.doNotRead && data.doNotRead.includes(currentUserEmail)) {
+              unreadMessagesExist = true;
+            }
+          });
+          setNewMessageArrived(unreadMessagesExist);
+        } else {
+          setNewMessageArrived(false);
+        }
+      }
+    );
+    return () => unsubscribe();
+  }, [chatId, currentUserEmail]);
+
   useEffect(() => {
     findChat();
   }, []);

@@ -2,12 +2,13 @@
 
 # dependencies
 node_modules/
-
+.env
 # Expo
 .expo/
 dist/
 web-build/
 expo-env.d.ts
+.env
 
 # Native
 *.orig.*
@@ -15,6 +16,7 @@ expo-env.d.ts
 *.p8
 *.p12
 *.key
+.env
 *.mobileprovision
 
 # Metro

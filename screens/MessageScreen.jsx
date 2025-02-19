@@ -6,7 +6,18 @@ import { LinearGradient } from "expo-linear-gradient";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Message from "../components/Message.jsx";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { addDoc, collection, getDocs, where, query, serverTimestamp, onSnapshot, orderBy } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  getDocs,
+  where,
+  doc,
+  query,
+  serverTimestamp,
+  onSnapshot,
+  orderBy,
+  updateDoc,
+} from "firebase/firestore";
 import { db, app } from "../firebaseConfig.js";
 import { getAuth } from "firebase/auth";
 import * as Location from "expo-location";
@@ -77,27 +88,49 @@ export default function MessageScreen({ route, navigation }) {
     chatQuery.forEach((doc) => {
       const data = doc.data();
       if (data.participants.includes(receiverEmail)) {
+        foundChatId = doc.id;
         setChatId(doc.id);
       }
     });
     return foundChatId;
   };
+  const scrollToEnd = () => {
+    if (flatList.current) {
+      flatList.current.scrollToEnd({ animated: true });
+    }
+  };
+  useEffect(() => {
+    const initializeChat = async () => {
+      const foundChatId = await findChat();
+      if (foundChatId) {
+        setChatId(foundChatId);
+      } else {
+        console.warn("Chat not found");
+      }
+    };
+    initializeChat();
+  }, []);
 
-  // const markMessagesAsRead = async () => {
-  //   const refForChangeMessageStatus = query(
-  //     collection(db, "messages", conversationId, "conversation"),
-  //     where("doNotReadBy", "array-contains", currentEmail)
-  //   );
-  //   const unreadMessages = await getDocs(refForChangeMessageStatus);
-  //   const docForUpdate = [];
-  //   unreadMessages.forEach(async (document) => {
-  //     docForUpdate.push(document.id);
-  //   });
-  //   docForUpdate.forEach(async (id) => {
-  //     const messageRef = doc(db, "messages", conversationId, "conversation", id);
-  //     await updateDoc(messageRef, { doNotReadBy: arrayRemove(currentEmail) });
-  //   });
-  // };
+  const markMessagesAsRead = async (chatId) => {
+    if (!chatId) return;
+    try {
+      const refForChangeMessageStatus = query(
+        collection(db, "chatRooms", chatId, "messages"),
+        where("doNotRead", "==", currentUserEmail)
+      );
+      const docForUpdate = [];
+      const unreadMessages = await getDocs(refForChangeMessageStatus);
+      unreadMessages.forEach((doc) => {
+        docForUpdate.push(doc.id);
+      });
+      docForUpdate.forEach(async (id) => {
+        const messageRef = doc(db, "chatRooms", chatId, "messages", id);
+        await updateDoc(messageRef, { doNotRead: "read" });
+      });
+    } catch (error) {
+      console.log("markMessagesAsRead", error.message);
+    }
+  };
 
   // useEffect(() => {
   //   Location.watchPositionAsync(
@@ -129,19 +162,12 @@ export default function MessageScreen({ route, navigation }) {
       console.log("sendMessage", error.message);
     }
   };
-  const scrollToEnd = () => {
-    if (flatList.current) {
-      flatList.current.scrollToEnd({ animated: true });
-    }
-  };
-  useEffect(() => {
-    findChat();
-  }, []);
   useEffect(() => {
     if (!chatId) {
       console.warn("chatId is null or undefined");
       return;
     }
+    markMessagesAsRead(chatId);
     const unsubscribe = onSnapshot(
       query(collection(db, "chatRooms", chatId, "messages"), orderBy("timestamp", "asc")),
       (snapshot) => {
