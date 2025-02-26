@@ -5,6 +5,7 @@ import * as colors from "../variables/colors.js";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebaseConfig.js";
 import { getAuth } from "firebase/auth";
+import { sendPushNotification } from "../notification.js";
 
 const BlockMessage = styled.View`
   width: 70%;

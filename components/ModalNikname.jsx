@@ -6,6 +6,7 @@ import * as colors from "../variables/colors.js";
 import { LinearGradient } from "expo-linear-gradient";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig.js";
+import { useTranslation } from "react-i18next";
 
 const BlockModalChangeNikname = styled.View`
   position: absolute;
@@ -52,9 +53,10 @@ const ChangeBtnCanselText = styled.Text`
 export default function ModalNikname({ setModalChangeNikname }) {
   const [newNikname, setNewNikname] = useState("");
   const authFirebase = getAuth();
+  const { t } = useTranslation();
   const handleChangeNikname = async () => {
     if (newNikname.length < 1) {
-      return Alert.alert("Your nikname should be longer then 1 symbol");
+      return Alert.alert(`${t("ModalNiknameAlerthandleChangeNikname")}`);
     }
     const cityRef = doc(db, "users", authFirebase.currentUser.email);
     await setDoc(cityRef, { nikname: newNikname }, { merge: true });
@@ -79,7 +81,7 @@ export default function ModalNikname({ setModalChangeNikname }) {
         }}
       >
         <ChangeNiknameInput
-          placeholder="Come up with new nikname"
+          placeholder={t("ModalNiknameChangeNiknameInput")}
           value={newNikname}
           onChangeText={setNewNikname}
         ></ChangeNiknameInput>
@@ -89,10 +91,10 @@ export default function ModalNikname({ setModalChangeNikname }) {
             setModalChangeNikname(false);
           }}
         >
-          <ChangeBtnText>Change nikname</ChangeBtnText>
+          <ChangeBtnText>{t("ModalNiknameChangeBtnText")}</ChangeBtnText>
         </ChangeBtn>
         <ChangeBtnCansel onPress={() => setModalChangeNikname(false)}>
-          <ChangeBtnCanselText>Cansel</ChangeBtnCanselText>
+          <ChangeBtnCanselText>{t("Cancel")}</ChangeBtnCanselText>
         </ChangeBtnCansel>
       </LinearGradient>
     </BlockModalChangeNikname>

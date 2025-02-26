@@ -16,5 +16,11 @@
   "ProfileNikname": "Nikname:",
   "ProfilePhone": "Phone number:",
   "ProfileAvatar": "Press here to choose your avatar",
-  "ProfileSignOut": "SignOut"
+  "ProfileSignOut": "SignOut",
+  "ModalNiknameAlerthandleChangeNikname": "Your nikname should be longer then 1 symbol",
+  "ModalNiknameChangeNiknameInput": "Come up with new nikname",
+  "ModalNiknameChangeBtnText": "Change nikname",
+  "MessageScreenMessageTitle": "Messages",
+  "MessageScreenPlaceholder": "Type your message",
+  "MessageScreenModalGiftTitle": "Name of posible gifts"
 }

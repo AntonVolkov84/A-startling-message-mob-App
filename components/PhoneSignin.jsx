@@ -1,11 +1,12 @@
 import { View, Text, Button, TextInput, Alert, TouchableOpacity } from "react-native";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useContext } from "react";
 import * as colors from "../variables/colors";
 import styled from "styled-components";
 import Recaptcha from "react-native-recaptcha-that-works";
 import { getAuth, updateProfile, createUserWithEmailAndPassword, signOut, sendEmailVerification } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import { AppContext } from "../App.js";
 
 const PhoneSignIn = styled.View`
   width: 100%;
@@ -48,7 +49,6 @@ const PhoneSignInBtnText = styled.Text`
   font-size: 20px;
 `;
 const BtnGoBack = styled.TouchableOpacity`
-  /* margin-top: 15px; */
   align-items: center;
   justify-content: center;
   width: 100%;
@@ -68,6 +68,7 @@ export default function PhoneSignin({ navigation }) {
   const recaptchaRef = useRef();
   const firebaseAuth = getAuth();
   const [verificationId, setVerificationId] = useState(null);
+  const expoPushToken = useContext(AppContext);
 
   const addToUsers = async (userId) => {
     const emailInLowerCase = email.toLowerCase();
@@ -79,6 +80,7 @@ export default function PhoneSignin({ navigation }) {
         email: emailInLowerCase,
         userId: userId,
         phoneNumber: phone,
+        pushToken: expoPushToken,
       };
       await setDoc(doc(db, "users", emailInLowerCase), user);
     } catch (error) {

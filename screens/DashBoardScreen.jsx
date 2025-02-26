@@ -12,6 +12,7 @@ import Profile from "../components/Profile.jsx";
 import AddCompanion from "../components/AddCompanion.jsx";
 import DashboardCompanion from "../components/DashboardCompanion.jsx";
 import i18next from "i18next";
+import { useTranslation } from "react-i18next";
 
 const BlockDashboard = styled.View`
   width: 100%;
@@ -70,6 +71,7 @@ export default function DashBoardScreen({ navigation }) {
   const [companionsData, setCompanionsData] = useState();
   const [companionsDataLoading, setCompanionsDataLoading] = useState(true);
   const authFirebase = getAuth();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!userData) return;
@@ -121,7 +123,7 @@ export default function DashBoardScreen({ navigation }) {
             <LogoTitle>A startling message</LogoTitle>
           </BlockLogo>
           {companionsDataLoading ? (
-            <Text style={{ textAlign: "center" }}>Loading ...</Text>
+            <Text style={{ textAlign: "center" }}>{t("Loading")}</Text>
           ) : (
             <SafeAreaView style={{ width: "100%", height: "100%" }}>
               <BlockFlatList

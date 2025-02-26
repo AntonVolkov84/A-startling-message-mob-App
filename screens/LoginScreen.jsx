@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Text, View, TouchableOpacity, Image, TextInput } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as colors from "../variables/colors.js";
@@ -12,6 +12,9 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
+import { AppContext } from "../App.js";
+import { db } from "../firebaseConfig.js";
+import { updateDoc, doc } from "firebase/firestore";
 
 const ButtonRegistration = styled.TouchableOpacity`
   justify-content: center;
@@ -69,6 +72,19 @@ function LoginScreen({ navigation }) {
   const auth = getAuth();
   const bounceValue = useSharedValue(1);
   const translateXValue = useSharedValue(0);
+  const expoPushToken = useContext(AppContext);
+
+  const updateNotificationToken = async (currentUserEmail) => {
+    console.log(expoPushToken);
+    try {
+      const firebaseRef = doc(db, "users", currentUserEmail);
+      await updateDoc(firebaseRef, {
+        pushToken: expoPushToken,
+      });
+    } catch (error) {
+      console.log("updateNotificationToken", error.message);
+    }
+  };
   useEffect(() => {
     const animate = () => {
       bounceValue.value = withRepeat(
@@ -78,8 +94,8 @@ function LoginScreen({ navigation }) {
           withTiming(1.3, { duration: 600, easing: Easing.inOut(Easing.ease) }),
           withTiming(1, { duration: 600, easing: Easing.inOut(Easing.ease) })
         ),
-        -1, // -1 означает бесконечное повторение
-        false // не зеркально (не чередовать)
+        -1,
+        false
       );
 
       translateXValue.value = withRepeat(
@@ -89,8 +105,8 @@ function LoginScreen({ navigation }) {
           withTiming(30, { duration: 600, easing: Easing.inOut(Easing.ease) }),
           withTiming(0, { duration: 600, easing: Easing.inOut(Easing.ease) })
         ),
-        -1, // -1 означает бесконечное повторение
-        false // не зеркально (не чередовать)
+        -1,
+        false
       );
     };
 
@@ -106,6 +122,7 @@ function LoginScreen({ navigation }) {
   const LogInWithEmail = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      updateNotificationToken(email);
     } catch (error) {
       Alert.alert("Wrong email or password");
       console.log("LogInWithEmail", error.message);

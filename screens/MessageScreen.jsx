@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Message from "../components/Message.jsx";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import firebase from "firebase/compat/app";
 import {
   addDoc,
   collection,
@@ -17,10 +18,15 @@ import {
   onSnapshot,
   orderBy,
   updateDoc,
+  startAt,
+  endAt,
 } from "firebase/firestore";
-import { db, app } from "../firebaseConfig.js";
+import { db } from "../firebaseConfig.js";
 import { getAuth } from "firebase/auth";
 import * as Location from "expo-location";
+import { useTranslation } from "react-i18next";
+import { sendPushNotification } from "../notification.js";
+import * as geofire from "geofire-common";
 
 const BlockMessageScreen = styled.View`
   width: 100%;
@@ -44,7 +50,7 @@ const InputBlock = styled.View`
 const MessageInput = styled.TextInput`
   width: 70%;
   height: 50px;
-  background-color: #6ba3be;
+  background-color: ${colors.MessageScreenInputBackground};
   padding-left: 10px;
   border-radius: 10px;
   margin-left: 10px;
@@ -67,18 +73,94 @@ const GoBackBlock = styled.TouchableOpacity`
   justify-content: center;
   align-items: center;
 `;
+const BlockGift = styled.TouchableOpacity`
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  right: 50px;
+  justify-content: center;
+  align-items: center;
+`;
+const BlockModalGift = styled.View`
+  width: 100%;
+  background-color: ${colors.MessageScreenModalGiftBackground};
+  height: 400px;
+  position: absolute;
+  z-index: 2;
+  left: 3%;
+  border-radius: 10px;
+  padding: 8px;
+`;
+const ModalGiftTitle = styled.Text`
+  font-size: 20px;
+  color: ${colors.MessageScreenModalGiftTitle};
+  text-align: center;
+`;
+const ModalGiftFlatList = styled.FlatList`
+  width: 100%;
+  height: 100%;
+`;
+const ModalGiftTouchableOpacity = styled.TouchableOpacity``;
+const ModalGiftText = styled.Text``;
 
 export default function MessageScreen({ route, navigation }) {
   const [messageText, setMessageText] = useState("");
   const [messagesData, setMessagesData] = useState(null);
   const [messagesDataLoading, setMessagesDataLoading] = useState(true);
+  const [giftScreen, setGiftScreen] = useState(false);
+  const [receiverExpoPushToken, setReceiverExpoPushToken] = useState("");
   const [chatId, setChatId] = useState(null);
   const { item } = route.params;
+  const { t } = useTranslation();
   const auth = getAuth();
   const currentUserEmail = auth.currentUser.email;
   const receiverEmail = item.email;
   const flatList = useRef(null);
   const currentUserUID = auth.currentUser.uid;
+  const data = [
+    { product: "chocolate", id: 0 },
+    { product: "bread", id: 1 },
+  ];
+  const findCustomersWithinRadius = async (latitude, longitude) => {
+    try {
+      const center = [latitude, longitude];
+      const radiusInM = 5 * 1000;
+      const bounds = geofire.geohashQueryBounds(center, radiusInM);
+      const promises = [];
+      for (const b of bounds) {
+        const q = query(collection(db, "customers"), orderBy("geohash"), startAt(b[0]), endAt(b[1]));
+
+        promises.push(getDocs(q));
+      }
+      const snapshots = await Promise.all(promises);
+      const matchingDocs = [];
+      for (const snap of snapshots) {
+        for (const doc of snap.docs) {
+          const lat = doc.get("location").lat;
+          const lng = doc.get("location").lng;
+          const distanceInKm = geofire.distanceBetween([lat, lng], center);
+          const distanceInM = distanceInKm * 1000;
+          if (distanceInM <= radiusInM) {
+            matchingDocs.push(doc.id);
+          }
+        }
+      }
+      console.log("matchingDocs", matchingDocs);
+      return matchingDocs;
+    } catch (error) {
+      console.error("Error finding customers within radius:", error);
+      return [];
+    }
+  };
+
+  useState(() => {
+    const unsubscribe = onSnapshot(doc(db, "users", receiverEmail), (snapshot) => {
+      setReceiverExpoPushToken(snapshot.data().pushToken);
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   const findChat = async () => {
     const chatQuery = await getDocs(
@@ -157,6 +239,7 @@ export default function MessageScreen({ route, navigation }) {
         location,
       };
       await addDoc(collection(db, "chatRooms", chatId, "messages"), data);
+      sendPushNotification(receiverExpoPushToken, messageText);
       setMessageText("");
     } catch (error) {
       console.log("sendMessage", error.message);
@@ -179,7 +262,14 @@ export default function MessageScreen({ route, navigation }) {
 
     return () => unsubscribe();
   }, [chatId]);
-
+  const getProducts = async () => {
+    const filteredMessageData = messagesData.filter((e) => e.autor === receiverEmail);
+    const latitude = filteredMessageData[filteredMessageData.length - 1].location.coords.latitude;
+    const longitude = filteredMessageData[filteredMessageData.length - 1].location.coords.longitude;
+    const customers = await findCustomersWithinRadius(latitude, longitude);
+    console.log(latitude, longitude, filteredMessageData);
+    console.log("result of customers", customers);
+  };
   return (
     <LinearGradient
       colors={[
@@ -193,7 +283,32 @@ export default function MessageScreen({ route, navigation }) {
       style={{ height: "100%", width: "100%", paddingTop: "10%" }}
     >
       <BlockMessageScreen>
-        <MessageTitle>Messages</MessageTitle>
+        <MessageTitle>{t("MessageScreenMessageTitle")}</MessageTitle>
+        {giftScreen && (
+          <BlockModalGift>
+            <ModalGiftTitle>{t("MessageScreenModalGiftTitle")}</ModalGiftTitle>
+            <ModalGiftFlatList
+              data={data}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <ModalGiftTouchableOpacity onPress={() => console.log(item.product)}>
+                  <ModalGiftText>{item.product}</ModalGiftText>
+                </ModalGiftTouchableOpacity>
+              )}
+            />
+            <ModalGiftTouchableOpacity onPress={() => setGiftScreen(false)}>
+              <ModalGiftText>{t("Cancel")}</ModalGiftText>
+            </ModalGiftTouchableOpacity>
+          </BlockModalGift>
+        )}
+        <BlockGift
+          onPress={() => {
+            getProducts();
+            setGiftScreen(true);
+          }}
+        >
+          <FontAwesome name="gift" size={35} color={colors.MessageScreenIconGiftColor} />
+        </BlockGift>
         {messagesDataLoading ? (
           <MessagesFlatList></MessagesFlatList>
         ) : (
@@ -213,7 +328,7 @@ export default function MessageScreen({ route, navigation }) {
           </GoBackBlock>
           <MessageInput
             multiline
-            placeholder="Type your message"
+            placeholder={t("MessageScreenPlaceholder")}
             value={messageText}
             onChangeText={setMessageText}
           ></MessageInput>

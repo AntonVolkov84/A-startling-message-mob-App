@@ -16,5 +16,11 @@
   "ProfileNikname": "Ник:",
   "ProfilePhone": "Номер телефона:",
   "ProfileAvatar": "Нажмите сюда, чтобы выбрать аватар",
-  "ProfileSignOut": "Выйти"
+  "ProfileSignOut": "Выйти",
+  "ModalNiknameAlerthandleChangeNikname": "Ваш ник должен быть длиннее 1 символа ",
+  "ModalNiknameChangeNiknameInput": "Выберите новый ник",
+  "ModalNiknameChangeBtnText": "Изменить ник",
+  "MessageScreenMessageTitle": "Сообщения",
+  "MessageScreenPlaceholder": "Ваше сообщение",
+  "MessageScreenModalGiftTitle": "Возможные подарки"
 }
