@@ -118,7 +118,7 @@ const ModalGiftPrice = styled.Text`
 `;
 const Loading = styled.Text`
   width: 100%;
-  height: 100%;
+  height: 70%;
   text-justify: center;
   text-align: center;
   font-size: 20px;
@@ -284,7 +284,9 @@ export default function MessageScreen({ route, navigation }) {
     try {
       const docRef = collection(db, "products", customer, "personalProducts");
       const result = await getDocs(docRef);
-      setGiftData(result.docs.map((doc) => ({ ...doc.data() })));
+      const arr = [];
+      arr.push(result.docs.map((doc) => ({ ...doc.data() })));
+      return arr;
     } catch (error) {
       console.log("getProductByCustomer", error.message);
       return null;
@@ -295,13 +297,16 @@ export default function MessageScreen({ route, navigation }) {
     const latitude = filteredMessageData[filteredMessageData.length - 1].location.coords.latitude;
     const longitude = filteredMessageData[filteredMessageData.length - 1].location.coords.longitude;
     const customers = await findCustomersWithinRadius(latitude, longitude);
-    const arrayOfProducts = [];
-    customers.forEach(async (customer) => {
+
+    const productPromises = customers.map(async (customer) => {
       const result = await getProductByCustomer(customer);
-      arrayOfProducts.push(...result);
+      return result;
     });
-    setGiftDataLoaded(true);
+    const productsArray = await Promise.all(productPromises);
+    const arrayOfProducts = productsArray.flat(Infinity);
+    console.log(arrayOfProducts);
     setGiftData(arrayOfProducts);
+    setGiftDataLoaded(true);
   };
 
   return (
