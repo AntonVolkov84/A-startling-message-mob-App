@@ -92,7 +92,7 @@ const BlockModalGift = styled.View`
   padding: 8px;
 `;
 const ModalGiftTitle = styled.Text`
-  font-size: 20px;
+  font-size: 25px;
   color: ${colors.MessageScreenModalGiftTitle};
   text-align: center;
 `;
@@ -101,13 +101,36 @@ const ModalGiftFlatList = styled.FlatList`
   height: 100%;
 `;
 const ModalGiftTouchableOpacity = styled.TouchableOpacity``;
-const ModalGiftText = styled.Text``;
+const BlockGiftInfo = styled.View`
+  flex-direction: row;
+`;
+const ModalGiftText = styled.Text`
+  width: 50%;
+  font-size: 20px;
+`;
+const ModalGiftQt = styled.Text`
+  width: 30%;
+  font-size: 20px;
+`;
+const ModalGiftPrice = styled.Text`
+  width: 20%;
+  font-size: 20px;
+`;
+const Loading = styled.Text`
+  width: 100%;
+  height: 100%;
+  text-justify: center;
+  text-align: center;
+  font-size: 20px;
+`;
 
 export default function MessageScreen({ route, navigation }) {
   const [messageText, setMessageText] = useState("");
   const [messagesData, setMessagesData] = useState(null);
   const [messagesDataLoading, setMessagesDataLoading] = useState(true);
   const [giftScreen, setGiftScreen] = useState(false);
+  const [giftData, setGiftData] = useState(null);
+  const [giftDataLoaded, setGiftDataLoaded] = useState(false);
   const [receiverExpoPushToken, setReceiverExpoPushToken] = useState("");
   const [chatId, setChatId] = useState(null);
   const { item } = route.params;
@@ -117,10 +140,7 @@ export default function MessageScreen({ route, navigation }) {
   const receiverEmail = item.email;
   const flatList = useRef(null);
   const currentUserUID = auth.currentUser.uid;
-  const data = [
-    { product: "chocolate", id: 0 },
-    { product: "bread", id: 1 },
-  ];
+
   const findCustomersWithinRadius = async (latitude, longitude) => {
     try {
       const center = [latitude, longitude];
@@ -129,7 +149,6 @@ export default function MessageScreen({ route, navigation }) {
       const promises = [];
       for (const b of bounds) {
         const q = query(collection(db, "customers"), orderBy("geohash"), startAt(b[0]), endAt(b[1]));
-
         promises.push(getDocs(q));
       }
       const snapshots = await Promise.all(promises);
@@ -145,7 +164,6 @@ export default function MessageScreen({ route, navigation }) {
           }
         }
       }
-      console.log("matchingDocs", matchingDocs);
       return matchingDocs;
     } catch (error) {
       console.error("Error finding customers within radius:", error);
@@ -262,14 +280,30 @@ export default function MessageScreen({ route, navigation }) {
 
     return () => unsubscribe();
   }, [chatId]);
+  const getProductByCustomer = async (customer) => {
+    try {
+      const docRef = collection(db, "products", customer, "personalProducts");
+      const result = await getDocs(docRef);
+      setGiftData(result.docs.map((doc) => ({ ...doc.data() })));
+    } catch (error) {
+      console.log("getProductByCustomer", error.message);
+      return null;
+    }
+  };
   const getProducts = async () => {
     const filteredMessageData = messagesData.filter((e) => e.autor === receiverEmail);
     const latitude = filteredMessageData[filteredMessageData.length - 1].location.coords.latitude;
     const longitude = filteredMessageData[filteredMessageData.length - 1].location.coords.longitude;
     const customers = await findCustomersWithinRadius(latitude, longitude);
-    console.log(latitude, longitude, filteredMessageData);
-    console.log("result of customers", customers);
+    const arrayOfProducts = [];
+    customers.forEach(async (customer) => {
+      const result = await getProductByCustomer(customer);
+      arrayOfProducts.push(...result);
+    });
+    setGiftDataLoaded(true);
+    setGiftData(arrayOfProducts);
   };
+
   return (
     <LinearGradient
       colors={[
@@ -287,16 +321,31 @@ export default function MessageScreen({ route, navigation }) {
         {giftScreen && (
           <BlockModalGift>
             <ModalGiftTitle>{t("MessageScreenModalGiftTitle")}</ModalGiftTitle>
-            <ModalGiftFlatList
-              data={data}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <ModalGiftTouchableOpacity onPress={() => console.log(item.product)}>
-                  <ModalGiftText>{item.product}</ModalGiftText>
-                </ModalGiftTouchableOpacity>
-              )}
-            />
-            <ModalGiftTouchableOpacity onPress={() => setGiftScreen(false)}>
+            {giftDataLoaded ? (
+              <ModalGiftFlatList
+                data={giftData}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <ModalGiftTouchableOpacity onPress={() => console.log(item.product)}>
+                    <BlockGiftInfo>
+                      <ModalGiftText>{item.productName}</ModalGiftText>
+                      <ModalGiftQt>{item.productQuantity}</ModalGiftQt>
+                      <ModalGiftPrice>{item.productPrice}</ModalGiftPrice>
+                    </BlockGiftInfo>
+                  </ModalGiftTouchableOpacity>
+                )}
+              />
+            ) : (
+              <Loading>Loading...</Loading>
+            )}
+
+            <ModalGiftTouchableOpacity
+              onPress={() => {
+                setGiftDataLoaded(false);
+                setGiftData(null);
+                setGiftScreen(false);
+              }}
+            >
               <ModalGiftText>{t("Cancel")}</ModalGiftText>
             </ModalGiftTouchableOpacity>
           </BlockModalGift>
