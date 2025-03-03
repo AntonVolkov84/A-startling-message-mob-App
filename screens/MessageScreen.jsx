@@ -244,9 +244,10 @@ export default function MessageScreen({ route, navigation }) {
   //     }
   //   );
   // }, []);
-  const sendMessage = async () => {
-    let location = await Location.getCurrentPositionAsync({});
+
+  const sendMessage = async (messageText) => {
     try {
+      let location = await Location.getCurrentPositionAsync({});
       const data = {
         text: messageText,
         timestamp: serverTimestamp(),
@@ -285,7 +286,15 @@ export default function MessageScreen({ route, navigation }) {
       const docRef = collection(db, "products", customer, "personalProducts");
       const result = await getDocs(docRef);
       const arr = [];
-      arr.push(result.docs.map((doc) => ({ ...doc.data() })));
+      arr.push(
+        result.docs.map((doc) => {
+          const docRef = doc.ref;
+          const parentCollectionRef = docRef.parent;
+          const parendDocRef = parentCollectionRef.parent;
+          const parentDocId = parendDocRef.id;
+          return { parentdocId: parentDocId, docId: doc.id, ...doc.data() };
+        })
+      );
       return arr;
     } catch (error) {
       console.log("getProductByCustomer", error.message);
@@ -304,7 +313,6 @@ export default function MessageScreen({ route, navigation }) {
     });
     const productsArray = await Promise.all(productPromises);
     const arrayOfProducts = productsArray.flat(Infinity);
-    console.log(arrayOfProducts);
     setGiftData(arrayOfProducts);
     setGiftDataLoaded(true);
   };
@@ -329,9 +337,15 @@ export default function MessageScreen({ route, navigation }) {
             {giftDataLoaded ? (
               <ModalGiftFlatList
                 data={giftData}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item, index) => index}
                 renderItem={({ item }) => (
-                  <ModalGiftTouchableOpacity onPress={() => console.log(item.product)}>
+                  <ModalGiftTouchableOpacity
+                    onPress={async () => {
+                      console.log(item);
+                      sendMessage(item.productName);
+                      setGiftScreen(false);
+                    }}
+                  >
                     <BlockGiftInfo>
                       <ModalGiftText>{item.productName}</ModalGiftText>
                       <ModalGiftQt>{item.productQuantity}</ModalGiftQt>
@@ -386,7 +400,7 @@ export default function MessageScreen({ route, navigation }) {
             value={messageText}
             onChangeText={setMessageText}
           ></MessageInput>
-          <IconSend onPress={() => sendMessage()}>
+          <IconSend onPress={() => sendMessage(messageText)}>
             <FontAwesome name="send" size={20} color={colors.MessageScreenGoBackIconColor} />
           </IconSend>
         </InputBlock>

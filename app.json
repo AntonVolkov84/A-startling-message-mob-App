@@ -2,7 +2,7 @@
   "expo": {
     "name": "A Startling Message",
     "slug": "astartlingmessage",
-    "version": "1.0.9",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/smile.png",
     "userInterfaceStyle": "light",
@@ -16,6 +16,12 @@
       "supportsTablet": true
     },
     "android": {
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "FOREGROUND_SERVICE",
+        "ACCESS_BACKGROUND_LOCATION"
+      ],
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/smile.png",
@@ -37,7 +43,8 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow A startling message to use your location."
+          "locationAlwaysAndWhenInUsePermission": "Allow A startling message to use your location.",
+          "isAndroidBackgroundLocationEnabled": "Allow App to use your location in the background"
         }
       ],
       [

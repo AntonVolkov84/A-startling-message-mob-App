@@ -25,6 +25,7 @@ export const AppContext = createContext(null);
 export default function App() {
   const [expoPushToken, setExpoPushToken] = useState("");
   const [notification, setNotification] = useState(false);
+  const [location, setLocation] = useState(null);
   const notificationListener = useRef();
   const responseListener = useRef();
   const [user, setUser] = useState("");

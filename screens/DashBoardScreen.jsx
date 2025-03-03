@@ -86,6 +86,7 @@ export default function DashBoardScreen({ navigation }) {
       unsubscribe();
     };
   }, []);
+
   useEffect(() => {
     const unsubscribe = onSnapshot(
       collection(db, "companions", authFirebase.currentUser.email, "personal_companions"),

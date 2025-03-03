@@ -75,7 +75,6 @@ function LoginScreen({ navigation }) {
   const expoPushToken = useContext(AppContext);
 
   const updateNotificationToken = async (currentUserEmail) => {
-    console.log(expoPushToken);
     try {
       const firebaseRef = doc(db, "users", currentUserEmail);
       await updateDoc(firebaseRef, {
