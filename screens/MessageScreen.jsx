@@ -103,18 +103,29 @@ const ModalGiftFlatList = styled.FlatList`
 const ModalGiftTouchableOpacity = styled.TouchableOpacity``;
 const BlockGiftInfo = styled.View`
   flex-direction: row;
+  border: 1px solid gold;
+  margin-bottom: 2px;
+  padding-left: 3px;
 `;
 const ModalGiftText = styled.Text`
   width: 50%;
   font-size: 20px;
+  color: ${colors.MessageScreenModalGiftTextColor};
+`;
+const ModalGiftTextCancel = styled.Text`
+  width: 50%;
+  font-size: 20px;
+  color: ${colors.MessageScreenModalGiftTitle};
 `;
 const ModalGiftQt = styled.Text`
   width: 30%;
   font-size: 20px;
+  color: ${colors.MessageScreenModalGiftTextColor};
 `;
 const ModalGiftPrice = styled.Text`
   width: 20%;
   font-size: 20px;
+  color: ${colors.MessageScreenModalGiftTextColor};
 `;
 const Loading = styled.Text`
   width: 100%;
@@ -245,11 +256,16 @@ export default function MessageScreen({ route, navigation }) {
   //   );
   // }, []);
 
-  const sendMessage = async (messageText) => {
+  const rendomCode = () => {
+    const codeForGift = Math.floor(Math.random() * 1000);
+    return codeForGift;
+  };
+  const sendMessage = async (messageText, codeForGift) => {
     try {
-      let location = await Location.getCurrentPositionAsync({});
+      let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      const text = codeForGift ? `${messageText} ${codeForGift}` : messageText;
       const data = {
-        text: messageText,
+        text: text,
         timestamp: serverTimestamp(),
         participants: [currentUserEmail, receiverEmail],
         doNotRead: receiverEmail,
@@ -266,7 +282,6 @@ export default function MessageScreen({ route, navigation }) {
   };
   useEffect(() => {
     if (!chatId) {
-      console.warn("chatId is null or undefined");
       return;
     }
     markMessagesAsRead(chatId);
@@ -341,8 +356,8 @@ export default function MessageScreen({ route, navigation }) {
                 renderItem={({ item }) => (
                   <ModalGiftTouchableOpacity
                     onPress={async () => {
-                      console.log(item);
-                      sendMessage(item.productName);
+                      const code = rendomCode();
+                      sendMessage(item.productName, code);
                       setGiftScreen(false);
                     }}
                   >
@@ -365,12 +380,13 @@ export default function MessageScreen({ route, navigation }) {
                 setGiftScreen(false);
               }}
             >
-              <ModalGiftText>{t("Cancel")}</ModalGiftText>
+              <ModalGiftTextCancel>{t("Cancel")}</ModalGiftTextCancel>
             </ModalGiftTouchableOpacity>
           </BlockModalGift>
         )}
         <BlockGift
           onPress={() => {
+            Keyboard.dismiss();
             getProducts();
             setGiftScreen(true);
           }}
