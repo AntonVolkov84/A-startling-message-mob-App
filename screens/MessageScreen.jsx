@@ -103,9 +103,10 @@ const ModalGiftFlatList = styled.FlatList`
 const ModalGiftTouchableOpacity = styled.TouchableOpacity``;
 const BlockGiftInfo = styled.View`
   flex-direction: row;
-  border: 1px solid gold;
   margin-bottom: 2px;
   padding-left: 3px;
+  background-color: ${colors.MessageScreenModalGiftBackgroung};
+  border-radius: 3px;
 `;
 const ModalGiftText = styled.Text`
   width: 50%;
@@ -133,6 +134,7 @@ const Loading = styled.Text`
   text-justify: center;
   text-align: center;
   font-size: 20px;
+  color: ${colors.MessageScreenModalGiftTextColor};
 `;
 
 export default function MessageScreen({ route, navigation }) {
@@ -149,8 +151,50 @@ export default function MessageScreen({ route, navigation }) {
   const auth = getAuth();
   const currentUserEmail = auth.currentUser.email;
   const receiverEmail = item.email;
+  const receiverPhone = item.phoneNumber;
   const flatList = useRef(null);
   const currentUserUID = auth.currentUser.uid;
+
+  const sendGift = (item) => {
+    const code = rendomCode();
+    const messageForCustomer = `Some one choose your product for gift to ${receiverPhone}. Product: ${item.productName}, product quantity: ${item.productQuantity}, product price: ${item.productPrice}. Receiver may have code for girt: ${code}. Thank you for your cooperation!`;
+    sendEmailToCustomer(item.parentdocId, messageForCustomer);
+    sendMessage(item.productName, code);
+    setGiftScreen(false);
+  };
+
+  const sendEmailToCustomer = async (toEmail, messageForCustomer) => {
+    console.log("toEmail", toEmail);
+    const templateParams = {
+      to_email: toEmail,
+      subject: "New order from A Startling message",
+      message: messageForCustomer,
+    };
+    const serviceId = process.env.EXPO_PUBLIC_EMAILJS_SERVICE_ID;
+    const templateId = process.env.EXPO_PUBLIC_EMAILJS_TEMPLATE_ID;
+    const userId = process.env.EXPO_PUBLIC_EMAILJS_PUBLIC_KEY;
+    const apiKey = process.env.EXPO_PUBLIC_EMAILJS_API_KEY;
+    const url = `https://api.emailjs.com/api/v1.0/email/send`;
+    const payload = {
+      service_id: serviceId,
+      template_id: templateId,
+      user_id: userId,
+      template_params: templateParams,
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      console.log("sendEmailToCustomer", error.message);
+    }
+  };
 
   const findCustomersWithinRadius = async (latitude, longitude) => {
     try {
@@ -356,9 +400,7 @@ export default function MessageScreen({ route, navigation }) {
                 renderItem={({ item }) => (
                   <ModalGiftTouchableOpacity
                     onPress={async () => {
-                      const code = rendomCode();
-                      sendMessage(item.productName, code);
-                      setGiftScreen(false);
+                      sendGift(item);
                     }}
                   >
                     <BlockGiftInfo>
