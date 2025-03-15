@@ -7,10 +7,12 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import Message from "../components/Message.jsx";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import firebase from "firebase/compat/app";
+import axios from "axios";
 import {
   addDoc,
   collection,
   getDocs,
+  getDoc,
   where,
   doc,
   query,
@@ -166,10 +168,50 @@ export default function MessageScreen({ route, navigation }) {
     const code = rendomCode();
     const messageForCustomer = `Some one choose your product for gift to ${receiverPhone}. Product: ${item.productName}, product quantity: ${item.productQuantity}, product price: ${item.productPrice}. Receiver may have code for girt: ${code}. Thank you for your cooperation!`;
     sendEmailToCustomer(item.parentdocId, messageForCustomer);
+    sendSMSTelegramm(item.parentdocId, messageForCustomer);
     sendMessage(item.selectedEmoji, code);
     setGiftScreen(false);
   };
+  const sendSMSTelegramm = async (email, messageForCustomer) => {
+    const TELEGRAM_API_KEY = process.env.EXPO_PUBLIC_TELEGRAMM_AUTH_TOKEN;
+    const TELEGRAM_API_URL = `https://api.telegram.org/bot${TELEGRAM_API_KEY}`;
+    const q = await getDoc(doc(db, "customers", email));
+    const telegramm = await q.data().telegrammChatId;
 
+    console.log("TELEGRAM_API_KEY", TELEGRAM_API_KEY);
+    console.log("URL", TELEGRAM_API_URL);
+    console.log("chatId", telegramm);
+    console.log("message", messageForCustomer);
+
+    if (!telegramm) {
+      setError("Chat ID не найден. Пожалуйста, сначала проверьте Chat ID.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${TELEGRAM_API_URL}/sendMessage`,
+        {
+          chat_id: telegramm,
+          text: messageForCustomer,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("Response", response.data);
+      if (response.data.ok) {
+        console.log("Message sent successfully:", response.data);
+      } else {
+        console.error("Failed to send message:", response.data);
+      }
+    } catch (error) {
+      console.error("Error occurred while sending message:", error.message);
+      setError("Произошла ошибка при отправке сообщения.");
+    }
+  };
   const sendEmailToCustomer = async (toEmail, messageForCustomer) => {
     const templateParams = {
       to_email: toEmail,
