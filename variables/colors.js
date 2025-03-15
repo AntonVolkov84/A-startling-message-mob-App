@@ -31,6 +31,7 @@ export const MessageScreenIconGiftColor = "gold";
 export const MessageScreenModalGiftBackground = "#6ba3be";
 export const MessageScreenInputBackground = "#6ba3be";
 export const MessageScreenModalGiftTitle = "whitesmoke";
+export const MessageScreenModalGiftAlertExpiredMessage = "whitesmoke";
 export const MessageScreenModalGiftTextColor = "whitesmoke";
 export const MessageScreenModalGiftBackgroung = "#497a91";
 export const NewMessageArrivedColor = "red";

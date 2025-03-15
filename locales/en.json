@@ -22,5 +22,7 @@
   "ModalNiknameChangeBtnText": "Change nikname",
   "MessageScreenMessageTitle": "Messages",
   "MessageScreenPlaceholder": "Type your message",
-  "MessageScreenModalGiftTitle": "Name of posible gifts"
+  "MessageScreenModalGiftTitle": "Name of posible gifts",
+  "MessageScreenModalGiftExpire": "Please greet your interlocutor. The list of gifts is formed from shops in his area, based on the geolocation of the last message. Not later than 5 minutes",
+  "MessageScreenModalGiftNoCustomers": "There is no one gift avaluable"
 }

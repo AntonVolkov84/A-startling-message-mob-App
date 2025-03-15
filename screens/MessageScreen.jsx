@@ -136,6 +136,11 @@ const Loading = styled.Text`
   font-size: 20px;
   color: ${colors.MessageScreenModalGiftTextColor};
 `;
+const TextAlertExpiredTimeMessage = styled.Text`
+  font-size: 20px;
+  text-align: center;
+  color: ${colors.MessageScreenModalGiftAlertExpiredMessage};
+`;
 
 export default function MessageScreen({ route, navigation }) {
   const [messageText, setMessageText] = useState("");
@@ -144,6 +149,8 @@ export default function MessageScreen({ route, navigation }) {
   const [giftScreen, setGiftScreen] = useState(false);
   const [giftData, setGiftData] = useState(null);
   const [giftDataLoaded, setGiftDataLoaded] = useState(false);
+  const [noCustomersAvailable, setNoCustomerAvailable] = useState(false);
+  const [alertExpiredTimeForGift, setAlertExpiredTimeForGift] = useState(false);
   const [receiverExpoPushToken, setReceiverExpoPushToken] = useState("");
   const [chatId, setChatId] = useState(null);
   const { item } = route.params;
@@ -159,12 +166,11 @@ export default function MessageScreen({ route, navigation }) {
     const code = rendomCode();
     const messageForCustomer = `Some one choose your product for gift to ${receiverPhone}. Product: ${item.productName}, product quantity: ${item.productQuantity}, product price: ${item.productPrice}. Receiver may have code for girt: ${code}. Thank you for your cooperation!`;
     sendEmailToCustomer(item.parentdocId, messageForCustomer);
-    sendMessage(item.productName, code);
+    sendMessage(item.selectedEmoji, code);
     setGiftScreen(false);
   };
 
   const sendEmailToCustomer = async (toEmail, messageForCustomer) => {
-    console.log("toEmail", toEmail);
     const templateParams = {
       to_email: toEmail,
       subject: "New order from A Startling message",
@@ -287,19 +293,6 @@ export default function MessageScreen({ route, navigation }) {
     }
   };
 
-  // useEffect(() => {
-  //   Location.watchPositionAsync(
-  //     {
-  //       accuracy: Location.Accuracy.High,
-  //       timeInterval: 10000, // обновление каждые 10 секунд
-  //       distanceInterval: 50, // обновление при изменении на 50 метров
-  //     },
-  //     (newLocation) => {
-  //       console.log("Interval", newLocation);
-  //     }
-  //   );
-  // }, []);
-
   const rendomCode = () => {
     const codeForGift = Math.floor(Math.random() * 1000);
     return codeForGift;
@@ -324,6 +317,7 @@ export default function MessageScreen({ route, navigation }) {
       console.log("sendMessage", error.message);
     }
   };
+
   useEffect(() => {
     if (!chatId) {
       return;
@@ -360,8 +354,27 @@ export default function MessageScreen({ route, navigation }) {
       return null;
     }
   };
+  const checkTimeOfLastMessage = (timestamp) => {
+    const messageDate = new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000);
+    const currentDate = new Date();
+    const timeDifference = currentDate - messageDate;
+    const timeDifferenceInMinutes = timeDifference / (1000 * 60);
+    if (timeDifferenceInMinutes < 5) {
+      return true;
+    } else {
+      setAlertExpiredTimeForGift(true);
+      setGiftData(true);
+      setGiftDataLoaded(true);
+      return false;
+    }
+  };
+
   const getProducts = async () => {
     const filteredMessageData = messagesData.filter((e) => e.autor === receiverEmail);
+    const timestemp = filteredMessageData[filteredMessageData.length - 1].timestamp;
+    if (!checkTimeOfLastMessage(timestemp)) {
+      return;
+    }
     const latitude = filteredMessageData[filteredMessageData.length - 1].location.coords.latitude;
     const longitude = filteredMessageData[filteredMessageData.length - 1].location.coords.longitude;
     const customers = await findCustomersWithinRadius(latitude, longitude);
@@ -372,6 +385,9 @@ export default function MessageScreen({ route, navigation }) {
     });
     const productsArray = await Promise.all(productPromises);
     const arrayOfProducts = productsArray.flat(Infinity);
+    if (!arrayOfProducts.length) {
+      setNoCustomerAvailable(true);
+    }
     setGiftData(arrayOfProducts);
     setGiftDataLoaded(true);
   };
@@ -393,6 +409,12 @@ export default function MessageScreen({ route, navigation }) {
         {giftScreen && (
           <BlockModalGift>
             <ModalGiftTitle>{t("MessageScreenModalGiftTitle")}</ModalGiftTitle>
+            {alertExpiredTimeForGift && (
+              <TextAlertExpiredTimeMessage>{t("MessageScreenModalGiftExpire")}</TextAlertExpiredTimeMessage>
+            )}
+            {noCustomersAvailable && (
+              <TextAlertExpiredTimeMessage>{t("MessageScreenModalGiftNoCustomers")}</TextAlertExpiredTimeMessage>
+            )}
             {giftDataLoaded ? (
               <ModalGiftFlatList
                 data={giftData}
@@ -404,7 +426,7 @@ export default function MessageScreen({ route, navigation }) {
                     }}
                   >
                     <BlockGiftInfo>
-                      <ModalGiftText>{item.productName}</ModalGiftText>
+                      <ModalGiftText>{item.selectedEmoji + " " + item.productName}</ModalGiftText>
                       <ModalGiftQt>{item.productQuantity}</ModalGiftQt>
                       <ModalGiftPrice>{item.productPrice}</ModalGiftPrice>
                     </BlockGiftInfo>
@@ -417,7 +439,9 @@ export default function MessageScreen({ route, navigation }) {
 
             <ModalGiftTouchableOpacity
               onPress={() => {
+                setNoCustomerAvailable(false);
                 setGiftDataLoaded(false);
+                setAlertExpiredTimeForGift(false);
                 setGiftData(null);
                 setGiftScreen(false);
               }}
