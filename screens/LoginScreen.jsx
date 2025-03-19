@@ -62,8 +62,8 @@ const LogInBtnText = styled.Text`
   font-size: 20px;
 `;
 const Smile = styled.Image`
-  width: 200px;
-  height: 200px;
+  width: 140px;
+  height: 140px;
   object-fit: cover;
 `;
 function LoginScreen({ navigation }) {
