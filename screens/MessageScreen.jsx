@@ -166,7 +166,13 @@ export default function MessageScreen({ route, navigation }) {
 
   const sendGift = (item) => {
     const code = rendomCode();
-    const messageForCustomer = `Some one choose your product for gift to ${receiverPhone}. Product: ${item.productName}, product quantity: ${item.productQuantity}, product price: ${item.productPrice}. Receiver may have code for girt: ${code}. Thank you for your cooperation!`;
+    const messageForCustomer = `Some one choose your product for gift to ${receiverPhone}. 
+    Product: ${item.productName}, product quantity: ${item.productQuantity}, product price: ${item.productPrice}. 
+    Receiver may have code for girt: ${code}. Thank you for your cooperation! 
+    
+    Ваш товар выбрали для подарка для ${receiverPhone}. 
+    Продукт: ${item.productName}, количество продукта: ${item.productQuantity}, цена: ${item.productPrice}. 
+    У получателя должен быть код: ${code}. Спасибо за сотрудничество!`;
     sendEmailToCustomer(item.parentdocId, messageForCustomer);
     sendSMSTelegramm(item.parentdocId, messageForCustomer);
     sendMessage(item.selectedEmoji, code);
@@ -177,17 +183,10 @@ export default function MessageScreen({ route, navigation }) {
     const TELEGRAM_API_URL = `https://api.telegram.org/bot${TELEGRAM_API_KEY}`;
     const q = await getDoc(doc(db, "customers", email));
     const telegramm = await q.data().telegrammChatId;
-
-    console.log("TELEGRAM_API_KEY", TELEGRAM_API_KEY);
-    console.log("URL", TELEGRAM_API_URL);
-    console.log("chatId", telegramm);
-    console.log("message", messageForCustomer);
-
     if (!telegramm) {
       setError("Chat ID не найден. Пожалуйста, сначала проверьте Chat ID.");
       return;
     }
-
     try {
       const response = await axios.post(
         `${TELEGRAM_API_URL}/sendMessage`,
@@ -201,12 +200,6 @@ export default function MessageScreen({ route, navigation }) {
           },
         }
       );
-      console.log("Response", response.data);
-      if (response.data.ok) {
-        console.log("Message sent successfully:", response.data);
-      } else {
-        console.error("Failed to send message:", response.data);
-      }
     } catch (error) {
       console.error("Error occurred while sending message:", error.message);
       setError("Произошла ошибка при отправке сообщения.");
@@ -247,7 +240,7 @@ export default function MessageScreen({ route, navigation }) {
   const findCustomersWithinRadius = async (latitude, longitude) => {
     try {
       const center = [latitude, longitude];
-      const radiusInM = 5 * 1000;
+      const radiusInM = 5 * 100;
       const bounds = geofire.geohashQueryBounds(center, radiusInM);
       const promises = [];
       for (const b of bounds) {

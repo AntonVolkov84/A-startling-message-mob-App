@@ -66,7 +66,7 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
   const currentUserEmail = authFirebase.currentUser.email;
   const { t } = useTranslation();
   const isPhone = (checkedPhone) => {
-    var regex = /^\+\d{1,3}\d{11,14}$/;
+    var regex = /^\+\d{1,3}\d{10,14}$/;
     return regex.test(checkedPhone);
   };
   const alreadyAddedPhone = async () => {

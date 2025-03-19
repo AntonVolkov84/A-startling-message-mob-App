@@ -1,12 +1,12 @@
-import { View, Text, Button, TextInput, Alert, TouchableOpacity } from "react-native";
+import { View, Text, Button, TextInput, Alert, TouchableOpacity, ActivityIndicator } from "react-native";
 import React, { useState, useRef, useContext } from "react";
 import * as colors from "../variables/colors";
 import styled from "styled-components";
-import Recaptcha from "react-native-recaptcha-that-works";
 import { getAuth, updateProfile, createUserWithEmailAndPassword, signOut, sendEmailVerification } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { AppContext } from "../App.js";
+import { WebView } from "react-native-webview";
 
 const PhoneSignIn = styled.View`
   width: 100%;
@@ -65,10 +65,29 @@ export default function PhoneSignin({ navigation }) {
   const [nikname, setNikname] = useState("");
   const [code, setCode] = useState("");
   const [confirmInput, setConfirmInput] = useState(false);
-  const recaptchaRef = useRef();
   const firebaseAuth = getAuth();
   const [verificationId, setVerificationId] = useState(null);
   const expoPushToken = useContext(AppContext);
+
+  const webviewRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+
+  const onMessage = (event) => {
+    const token = event.nativeEvent.data;
+    if (!token) {
+      return Alert.alert("Verification failed");
+    }
+    register(token);
+    setLoading(false);
+  };
+
+  const onLoadStart = () => {
+    setLoading(true);
+  };
+
+  const onLoadEnd = () => {
+    setLoading(false);
+  };
 
   const addToUsers = async (userId) => {
     const emailInLowerCase = email.toLowerCase();
@@ -90,8 +109,14 @@ export default function PhoneSignin({ navigation }) {
 
   const register = async (token) => {
     try {
+      if (!/^\+\d{10,15}$/.test(phone)) {
+        throw new Error("Invalid phone number format. Please enter a valid phone number.");
+      }
+      if (!token) {
+        throw new Error("Invalid reCAPTCHA token. Please try again.");
+      }
       const response = await fetch(
-        "https://identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key=AIzaSyA6RB8iNw7-CXgS1GOkGScHK63RJuiMTIQ",
+        `https://identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key=${process.env.EXPO_PUBLIC_API_KEY}`,
         {
           method: "POST",
           headers: {
@@ -104,16 +129,21 @@ export default function PhoneSignin({ navigation }) {
         }
       );
       const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error.message);
+      }
       setVerificationId(data.sessionInfo);
       setConfirmInput(true);
     } catch (error) {
       console.error("Error registering user", error.message);
+      Alert.alert("Registration Error", error.message);
     }
   };
+
   const verifyCode = async () => {
     try {
-      await fetch(
-        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key=AIzaSyA6RB8iNw7-CXgS1GOkGScHK63RJuiMTIQ",
+      const response = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key=${process.env.EXPO_PUBLIC_API_KEY}`,
         {
           method: "POST",
           headers: {
@@ -125,10 +155,14 @@ export default function PhoneSignin({ navigation }) {
           }),
         }
       );
+      if (!response.ok) {
+        throw new Error(result.error.message);
+      }
       await registerWithEmail();
       clearInput();
     } catch (error) {
-      console.error("Error verifying code", error);
+      console.error("Error verifying code", error.message);
+      Alert.alert("Verification Error", error.message);
     }
   };
   const registerWithEmail = async () => {
@@ -152,7 +186,11 @@ export default function PhoneSignin({ navigation }) {
   };
   const phoneSignInApp = () => {
     if (verifyInputs()) {
-      recaptchaRef.current.open();
+      try {
+        webviewRef.current.injectJavaScript(`document.dispatchEvent(new MessageEvent('message'));`);
+      } catch (error) {
+        console.log("recaptcha", error.message);
+      }
     }
   };
 
@@ -226,14 +264,36 @@ export default function PhoneSignin({ navigation }) {
           </>
         ) : null}
       </BlockPhoneSignIn>
-      <Recaptcha
-        ref={recaptchaRef}
-        siteKey={process.env.EXPO_PUBLIC_API_SITEKEY}
-        baseUrl="http://localhost"
-        onVerify={(token) => {
-          register(token);
-        }}
-      />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        {loading && <ActivityIndicator size="large" color="#0000ff" />}
+        <WebView
+          ref={webviewRef}
+          source={{
+            html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <script src="https://www.google.com/recaptcha/enterprise.js?render=6Lc9bfgqAAAAAJiSNs1Oj3h-Ci4vThn3HWnMcL-M"></script>
+            </head>
+            <body>
+              <script>
+  document.addEventListener("message", function(event) {
+                    grecaptcha.enterprise.ready(async () => {
+                      const token = await grecaptcha.enterprise.execute('6Lc9bfgqAAAAAJiSNs1Oj3h-Ci4vThn3HWnMcL-M', {action: 'LOGIN'});
+                      window.ReactNativeWebView.postMessage(token);
+                    });
+                  });
+</script>
+            </body>
+          </html>
+        `,
+          }}
+          onMessage={onMessage}
+          onLoadStart={onLoadStart}
+          onLoadEnd={onLoadEnd}
+          style={{ flex: 1, width: "100%" }}
+        />
+      </View>
       <BtnGoBack>
         <BtnGoBackText onPress={() => navigation.goBack()}>Go back</BtnGoBackText>
       </BtnGoBack>
