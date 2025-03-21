@@ -6,7 +6,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Message from "../components/Message.jsx";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import firebase from "firebase/compat/app";
 import axios from "axios";
 import {
   addDoc,
@@ -153,6 +152,7 @@ export default function MessageScreen({ route, navigation }) {
   const [giftDataLoaded, setGiftDataLoaded] = useState(false);
   const [noCustomersAvailable, setNoCustomerAvailable] = useState(false);
   const [alertExpiredTimeForGift, setAlertExpiredTimeForGift] = useState(false);
+  const [location, setLocation] = useState(null);
   const [receiverExpoPushToken, setReceiverExpoPushToken] = useState("");
   const [chatId, setChatId] = useState(null);
   const { item } = route.params;
@@ -164,19 +164,43 @@ export default function MessageScreen({ route, navigation }) {
   const flatList = useRef(null);
   const currentUserUID = auth.currentUser.uid;
 
-  const sendGift = (item) => {
+  const getAdressFromLocation = async () => {
+    try {
+      const latitude = location.latitude;
+      const longitude = location.longitude;
+      const response = await axios.get(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+      );
+      if (response.data && response.data.address) {
+        const address = response.data.address;
+        const street = address.road || address.pedestrian || address.cycleway || address.path || "";
+        const houseNumber = address.house_number || "";
+        const result = `${street} ${houseNumber}`.trim();
+        return result;
+      } else {
+        throw new Error("Не удалось получить адрес");
+      }
+    } catch (error) {
+      console.log("getAdressFromLocation", error.message);
+    }
+  };
+
+  const sendGift = async (item) => {
     const code = rendomCode();
+    const address = await getAdressFromLocation();
+    console.log(address);
     const messageForCustomer = `Some one choose your product for gift to ${receiverPhone}. 
     Product: ${item.productName}, product quantity: ${item.productQuantity}, product price: ${item.productPrice}. 
-    Receiver may have code for girt: ${code}. Thank you for your cooperation! 
+    Receiver may have code for girt: ${code}. Last adress of receiver ${address}. Thank you for your cooperation! 
     
     Ваш товар выбрали для подарка для ${receiverPhone}. 
     Продукт: ${item.productName}, количество продукта: ${item.productQuantity}, цена: ${item.productPrice}. 
-    У получателя должен быть код: ${code}. Спасибо за сотрудничество!`;
+    У получателя должен быть код: ${code}. Последнее местоположение получателя ${address}. Спасибо за сотрудничество!`;
     sendEmailToCustomer(item.parentdocId, messageForCustomer);
     sendSMSTelegramm(item.parentdocId, messageForCustomer);
     sendMessage(item.selectedEmoji, code);
     setGiftScreen(false);
+    setLocation(null);
   };
   const sendSMSTelegramm = async (email, messageForCustomer) => {
     const TELEGRAM_API_KEY = process.env.EXPO_PUBLIC_TELEGRAMM_AUTH_TOKEN;
@@ -236,8 +260,8 @@ export default function MessageScreen({ route, navigation }) {
       console.log("sendEmailToCustomer", error.message);
     }
   };
-
   const findCustomersWithinRadius = async (latitude, longitude) => {
+    setLocation({ latitude, longitude });
     try {
       const center = [latitude, longitude];
       const radiusInM = 5 * 100;
@@ -471,7 +495,6 @@ export default function MessageScreen({ route, navigation }) {
             ) : (
               <Loading>Loading...</Loading>
             )}
-
             <ModalGiftTouchableOpacity
               onPress={() => {
                 setNoCustomerAvailable(false);
@@ -479,6 +502,7 @@ export default function MessageScreen({ route, navigation }) {
                 setAlertExpiredTimeForGift(false);
                 setGiftData(null);
                 setGiftScreen(false);
+                setLocation(null);
               }}
             >
               <ModalGiftTextCancel>{t("Cancel")}</ModalGiftTextCancel>

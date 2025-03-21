@@ -249,6 +249,7 @@ export default function PhoneSignin({ navigation }) {
         ></PhoneSignInInput>
         <PhoneSignInInput
           placeholder="Come up with nikname"
+          maxLength={13}
           value={nikname}
           onChangeText={setNikname}
         ></PhoneSignInInput>

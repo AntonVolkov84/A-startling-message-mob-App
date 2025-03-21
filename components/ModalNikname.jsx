@@ -81,6 +81,7 @@ export default function ModalNikname({ setModalChangeNikname }) {
         }}
       >
         <ChangeNiknameInput
+          maxLength={13}
           placeholder={t("ModalNiknameChangeNiknameInput")}
           value={newNikname}
           onChangeText={setNewNikname}

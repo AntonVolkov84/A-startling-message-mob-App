@@ -35,7 +35,10 @@ const BoxForMessageText = styled.Text`
 `;
 const MessageNameBlockText = styled.Text`
   width: 50px;
-  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 8px;
   text-align: center;
 `;
 export default memo(function Message({ item }) {
@@ -78,7 +81,7 @@ export default memo(function Message({ item }) {
                 uri: userData.photoUrl,
               }}
             ></MessageAvatarBlock>
-            <MessageNameBlockText>{userData.nikname}</MessageNameBlockText>
+            <MessageNameBlockText numberOfLines={1}>{userData.nikname}</MessageNameBlockText>
           </BlockAutor>
           <BoxForMessage>
             <BoxForMessageText>{item.text}</BoxForMessageText>
