@@ -116,7 +116,7 @@ export default function PhoneSignin({ navigation }) {
         throw new Error("Invalid reCAPTCHA token. Please try again.");
       }
       const response = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key=${process.env.EXPO_PUBLIC_API_KEY}`,
+        `https://identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key=AIzaSyA6RB8iNw7-CXgS1GOkGScHK63RJuiMTIQ`,
         {
           method: "POST",
           headers: {
@@ -143,7 +143,7 @@ export default function PhoneSignin({ navigation }) {
   const verifyCode = async () => {
     try {
       const response = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key=${process.env.EXPO_PUBLIC_API_KEY}`,
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key=AIzaSyA6RB8iNw7-CXgS1GOkGScHK63RJuiMTIQ`,
         {
           method: "POST",
           headers: {

@@ -44,6 +44,7 @@ const MessagesFlatList = styled.FlatList`
 `;
 const InputBlock = styled.View`
   flex-direction: row;
+  margin-top: 5px;
   width: 100%;
   height: 50px;
   padding: 0;
@@ -191,7 +192,7 @@ export default function MessageScreen({ route, navigation }) {
     console.log(address);
     const messageForCustomer = `Some one choose your product for gift to ${receiverPhone}. 
     Product: ${item.productName}, product quantity: ${item.productQuantity}, product price: ${item.productPrice}. 
-    Receiver may have code for girt: ${code}. Last adress of receiver ${address}. Thank you for your cooperation! 
+    Receiver may have code for gift: ${code}. Last address of receiver ${address}. Thank you for your cooperation! 
     
     Ваш товар выбрали для подарка для ${receiverPhone}. 
     Продукт: ${item.productName}, количество продукта: ${item.productQuantity}, цена: ${item.productPrice}. 
