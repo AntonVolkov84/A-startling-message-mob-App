@@ -35,3 +35,4 @@ export const MessageScreenModalGiftAlertExpiredMessage = "whitesmoke";
 export const MessageScreenModalGiftTextColor = "whitesmoke";
 export const MessageScreenModalGiftBackgroung = "#497a91";
 export const NewMessageArrivedColor = "red";
+export const DashboardDelCompanionInfo = "whitesmoke";

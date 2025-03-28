@@ -357,7 +357,40 @@ export default function MessageScreen({ route, navigation }) {
     const codeForGift = Math.floor(Math.random() * 1000);
     return codeForGift;
   };
+  const checkReceiverIncludeCompanion = async () => {
+    try {
+      const q = await getDocs(
+        query(
+          collection(db, "companions", receiverEmail, "personal_companions"),
+          where("email", "==", currentUserEmail)
+        )
+      );
+      if (!q.empty) {
+        return;
+      } else {
+        addCompanionToReceiver();
+      }
+    } catch (error) {
+      console.log("checkReceiverIncludeCompanion", error.message);
+    }
+  };
+  const addCompanionToReceiver = async () => {
+    try {
+      console.log("1");
+      const q = await getDoc(doc(db, "users", currentUserEmail));
+      const phone = q.data().phoneNumber;
+      const data = {
+        email: currentUserEmail,
+        timestamp: serverTimestamp(),
+        phoneNumber: phone,
+      };
+      await addDoc(collection(db, "companions", receiverEmail, "personal_companions"), data);
+    } catch (error) {
+      console.log("addCompanionToReceiver", error.message);
+    }
+  };
   const sendMessage = async (messageText, codeForGift) => {
+    checkReceiverIncludeCompanion();
     try {
       let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
       const text = codeForGift ? `${messageText} ${codeForGift}` : messageText;

@@ -2,6 +2,7 @@
   "language": "Язык",
   "Cancel": "Отмена",
   "Loading": "Загрузка...",
+  "Delete": "Delete",
   "AddCompanionTitle": "Добавить друга",
   "AddCompanionPhoneFormat": "Формат номера: + 'код страны' 'номер телефона'",
   "AddCompanionPlaceholder": "Укажите номер для поиска",
@@ -24,5 +25,6 @@
   "MessageScreenPlaceholder": "Ваше сообщение",
   "MessageScreenModalGiftTitle": "Возможные подарки",
   "MessageScreenModalGiftExpire": "Пожалуйста, поприветствуйте вашего собеседника. Список подарков формируется из магазинов в округе него, исходя из геолокаци последнего сообщения. Не позднее 5 минут",
-  "MessageScreenModalGiftNoCustomers": "Нет доступных подарков"
+  "MessageScreenModalGiftNoCustomers": "Нет доступных подарков",
+  "DashboardDelCompanionInfo": "Вы действительно хотите удалить этого собеседника?"
 }

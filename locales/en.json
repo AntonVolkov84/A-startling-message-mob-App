@@ -2,6 +2,7 @@
   "language": "Language",
   "Cancel": "Cancel",
   "Loading": "Loading...",
+  "Delete": "Delete",
   "AddCompanionTitle": "Add companion",
   "AddCompanionPhoneFormat": "Phone format: + 'country code' 'phone number'",
   "AddCompanionPlaceholder": "Type phone for search",
@@ -24,5 +25,6 @@
   "MessageScreenPlaceholder": "Type your message",
   "MessageScreenModalGiftTitle": "Name of posible gifts",
   "MessageScreenModalGiftExpire": "Please greet your interlocutor. The list of gifts is formed from shops in his area, based on the geolocation of the last message. Not later than 5 minutes",
-  "MessageScreenModalGiftNoCustomers": "There is no one gift avaluable"
+  "MessageScreenModalGiftNoCustomers": "There is no one gift avaluable",
+  "DashboardDelCompanionInfo": "Do you realy wont to delete this companion?"
 }

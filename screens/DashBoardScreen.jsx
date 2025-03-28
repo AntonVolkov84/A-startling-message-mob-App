@@ -5,7 +5,7 @@ import styled from "styled-components";
 import * as colors from "../variables/colors.js";
 import { LinearGradient } from "expo-linear-gradient";
 import Footer from "../components/Footer.jsx";
-import { collection, doc, onSnapshot } from "firebase/firestore";
+import { collection, doc, onSnapshot, deleteDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig.js";
 import ModalNikname from "../components/ModalNikname.jsx";
 import Profile from "../components/Profile.jsx";
@@ -62,15 +62,52 @@ const BlockCompanion = styled.TouchableOpacity`
 const FooterView = styled.View`
   height: 60px;
 `;
+const ModalDelCompanionWindow = styled.View`
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  padding-top: 50px;
+`;
+const ModalDelCompanionWindowInfo = styled.View`
+  width: 100%;
+  height: fit-content;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+`;
+const ModalDelCompanionWindowInfoText = styled.Text`
+  text-align: center;
+  font-size: 20px;
+  color: ${colors.DashboardDelCompanionInfo};
+`;
+const ModalDelCompanionWindowBlockButton = styled.View`
+  flex-direction: row;
+  justify-content: space-around;
+  margin-top: 10px;
+`;
+const ModalDelCompanionWindowButton = styled.TouchableOpacity`
+  height: 30px;
+  width: 100px;
+  background-color: ${colors.PhoneSignInBtnBackgroundColor};
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+`;
+const ModalDelCompanionWindowButtonText = styled.Text`
+  text-align: center;
+  color: ${colors.DashboardDelCompanionInfo};
+`;
 
 export default function DashBoardScreen({ navigation }) {
   const [modalProfile, setModalProfile] = useState(false);
   const [modalChangeNikname, setModalChangeNikname] = useState(false);
   const [modalAddCompanion, setModalAddCompanion] = useState(false);
+  const [modalDelCompanion, setModalDelCompanion] = useState("");
   const [userData, setUserData] = useState();
   const [companionsData, setCompanionsData] = useState();
   const [companionsDataLoading, setCompanionsDataLoading] = useState(true);
   const authFirebase = getAuth();
+  const userEmail = authFirebase.currentUser.email;
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -86,7 +123,14 @@ export default function DashBoardScreen({ navigation }) {
       unsubscribe();
     };
   }, []);
-
+  const delCompanion = async () => {
+    try {
+      await deleteDoc(doc(db, "companions", userEmail, "personal_companions", modalDelCompanion.docId));
+      setModalDelCompanion("");
+    } catch (error) {
+      console.log("delCompanion", error.message);
+    }
+  };
   useEffect(() => {
     const unsubscribe = onSnapshot(
       collection(db, "companions", authFirebase.currentUser.email, "personal_companions"),
@@ -118,27 +162,54 @@ export default function DashBoardScreen({ navigation }) {
           {modalChangeNikname ? <ModalNikname setModalChangeNikname={setModalChangeNikname} /> : null}
         </>
       ) : (
-        <BlockDashboard>
-          <BlockLogo>
-            <LogoIcon source={require("../assets/smileWithHand.png")}></LogoIcon>
-            <LogoTitle>A startling message</LogoTitle>
-          </BlockLogo>
-          {companionsDataLoading ? (
-            <Text style={{ textAlign: "center" }}>{t("Loading")}</Text>
-          ) : (
-            <SafeAreaView style={{ width: "100%", height: "100%" }}>
-              <BlockFlatList
-                data={companionsData}
-                renderItem={({ item }) => (
-                  <BlockCompanion onPress={() => navigation.navigate("MessageScreen", { item })}>
-                    <DashboardCompanion item={item} />
-                  </BlockCompanion>
-                )}
-                keyExtractor={(item) => item.docId}
-              />
-            </SafeAreaView>
+        <>
+          {modalDelCompanion && (
+            <ModalDelCompanionWindow>
+              <BlockCompanion>
+                <DashboardCompanion item={modalDelCompanion} />
+              </BlockCompanion>
+              <ModalDelCompanionWindowInfo>
+                <ModalDelCompanionWindowInfoText>{t("DashboardDelCompanionInfo")}</ModalDelCompanionWindowInfoText>
+              </ModalDelCompanionWindowInfo>
+              <ModalDelCompanionWindowBlockButton>
+                <ModalDelCompanionWindowButton onPress={() => setModalDelCompanion("")}>
+                  <ModalDelCompanionWindowButtonText>{t("Cancel")}</ModalDelCompanionWindowButtonText>
+                </ModalDelCompanionWindowButton>
+                <ModalDelCompanionWindowButton
+                  onPress={() => {
+                    delCompanion();
+                  }}
+                >
+                  <ModalDelCompanionWindowButtonText>{t("Delete")}</ModalDelCompanionWindowButtonText>
+                </ModalDelCompanionWindowButton>
+              </ModalDelCompanionWindowBlockButton>
+            </ModalDelCompanionWindow>
           )}
-        </BlockDashboard>
+          <BlockDashboard>
+            <BlockLogo>
+              <LogoIcon source={require("../assets/smileWithHand.png")}></LogoIcon>
+              <LogoTitle>A startling message</LogoTitle>
+            </BlockLogo>
+            {companionsDataLoading ? (
+              <Text style={{ textAlign: "center" }}>{t("Loading")}</Text>
+            ) : (
+              <SafeAreaView style={{ width: "100%", height: "100%" }}>
+                <BlockFlatList
+                  data={companionsData}
+                  renderItem={({ item }) => (
+                    <BlockCompanion
+                      onLongPress={() => setModalDelCompanion(item)}
+                      onPress={() => navigation.navigate("MessageScreen", { item })}
+                    >
+                      <DashboardCompanion item={item} />
+                    </BlockCompanion>
+                  )}
+                  keyExtractor={(item) => item.docId}
+                />
+              </SafeAreaView>
+            )}
+          </BlockDashboard>
+        </>
       )}
       <FooterView>
         <Footer
