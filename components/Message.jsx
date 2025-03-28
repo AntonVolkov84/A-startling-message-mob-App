@@ -1,13 +1,13 @@
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, TouchableOpacity } from "react-native";
 import React, { useState, useEffect, memo } from "react";
 import styled from "styled-components";
 import * as colors from "../variables/colors.js";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, deleteDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig.js";
 import { getAuth } from "firebase/auth";
-import { sendPushNotification } from "../notification.js";
+import { useTranslation } from "react-i18next";
 
-const BlockMessage = styled.View`
+const BlockMessage = styled.TouchableOpacity`
   width: 70%;
   height: fit-content;
   padding-top: 5px;
@@ -41,12 +41,41 @@ const MessageNameBlockText = styled.Text`
   font-size: 8px;
   text-align: center;
 `;
-export default memo(function Message({ item }) {
+const Modal = styled.View`
+  width: 70%;
+  height: fit-content;
+  padding: 5px;
+  border-radius: 5px;
+  margin-top: 5px;
+  margin-left: 30%;
+  background-color: ${colors.MessageBackgroundColorWithAuthor};
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+`;
+const ModalBtn = styled.TouchableOpacity`
+  width: 70px;
+  height: 30px;
+  background-color: ${colors.MessageBackgroundColor};
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+const ModalBtnText = styled.Text`
+  font-size: 12px;
+  text-align: center;
+  color: white;
+`;
+
+export default memo(function Message({ item, setMessageUpdate }) {
   const [userData, setUserData] = useState(null);
   const [isAuthorCurrentUser, setIsAythorCurrentUser] = useState(false);
+  const [changeMessage, setChangeMessage] = useState(false);
   const auth = getAuth();
   const autorEmail = item.autor;
   const currentUserEmail = auth.currentUser.email;
+  const { t } = useTranslation();
 
   useEffect(() => {
     const unsubscribe = onSnapshot(doc(db, "users", autorEmail), (snapshot) => {
@@ -60,33 +89,72 @@ export default memo(function Message({ item }) {
       setIsAythorCurrentUser(true);
     }
   }, []);
-
+  const deleteMessage = async () => {
+    try {
+      await deleteDoc(doc(db, "chatRooms", item.parentId, "messages", item.docId));
+    } catch (error) {
+      console.log("deleteMessage", error.message);
+    }
+  };
   return (
     <>
       {userData ? (
-        <BlockMessage
-          style={{
-            paddingLeft: isAuthorCurrentUser ? 15 : 5,
-            backgroundColor: isAuthorCurrentUser
-              ? colors.MessageBackgroundColorWithAuthor
-              : colors.MessageBackgroundColor,
-            borderRadius: 5,
-            flexDirection: isAuthorCurrentUser ? "row-reverse" : "row",
-            marginLeft: isAuthorCurrentUser ? "30%" : "0",
-          }}
-        >
-          <BlockAutor>
-            <MessageAvatarBlock
-              source={{
-                uri: userData.photoUrl,
+        <>
+          {changeMessage && isAuthorCurrentUser ? (
+            <Modal>
+              <ModalBtn onPress={() => setChangeMessage(false)}>
+                <ModalBtnText>{t("Cancel")}</ModalBtnText>
+              </ModalBtn>
+              <ModalBtn
+                onPress={() => {
+                  setMessageUpdate({
+                    messageText: item.text,
+                    parentId: item.parentId,
+                    docId: item.docId,
+                  });
+                  setChangeMessage(false);
+                }}
+              >
+                <ModalBtnText>{t("Update")}</ModalBtnText>
+              </ModalBtn>
+              <ModalBtn>
+                <ModalBtnText
+                  onPress={() => {
+                    deleteMessage();
+                    setChangeMessage(false);
+                  }}
+                >
+                  {t("Delete")}
+                </ModalBtnText>
+              </ModalBtn>
+            </Modal>
+          ) : (
+            <BlockMessage
+              onLongPress={() => setChangeMessage(true)}
+              style={{
+                paddingLeft: isAuthorCurrentUser ? 15 : 5,
+                backgroundColor: isAuthorCurrentUser
+                  ? colors.MessageBackgroundColorWithAuthor
+                  : colors.MessageBackgroundColor,
+                borderRadius: 5,
+                flexDirection: isAuthorCurrentUser ? "row-reverse" : "row",
+                marginLeft: isAuthorCurrentUser ? "30%" : "0",
               }}
-            ></MessageAvatarBlock>
-            <MessageNameBlockText numberOfLines={1}>{userData.nikname}</MessageNameBlockText>
-          </BlockAutor>
-          <BoxForMessage>
-            <BoxForMessageText>{item.text}</BoxForMessageText>
-          </BoxForMessage>
-        </BlockMessage>
+            >
+              <BlockAutor>
+                <MessageAvatarBlock
+                  source={{
+                    uri: userData.photoUrl,
+                  }}
+                ></MessageAvatarBlock>
+                <MessageNameBlockText numberOfLines={1}>{userData.nikname}</MessageNameBlockText>
+              </BlockAutor>
+              <BoxForMessage>
+                <BoxForMessageText>{item.text}</BoxForMessageText>
+              </BoxForMessage>
+            </BlockMessage>
+          )}
+        </>
       ) : null}
     </>
   );

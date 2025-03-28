@@ -148,6 +148,7 @@ export default function MessageScreen({ route, navigation }) {
   const [messageText, setMessageText] = useState("");
   const [messagesData, setMessagesData] = useState(null);
   const [messagesDataLoading, setMessagesDataLoading] = useState(true);
+  const [messagesUpdate, setMessageUpdate] = useState("");
   const [giftScreen, setGiftScreen] = useState(false);
   const [giftData, setGiftData] = useState(null);
   const [giftDataLoaded, setGiftDataLoaded] = useState(false);
@@ -165,6 +166,20 @@ export default function MessageScreen({ route, navigation }) {
   const flatList = useRef(null);
   const currentUserUID = auth.currentUser.uid;
 
+  const updateMessage = async () => {
+    try {
+      await updateDoc(doc(db, "chatRooms", messagesUpdate.parentId, "messages", messagesUpdate.docId), {
+        text: messageText,
+      });
+      setMessageUpdate("");
+      setMessageText("");
+    } catch (error) {
+      console.log("updateMessage", error.message);
+    }
+  };
+  useEffect(() => {
+    setMessageText(messagesUpdate.messageText);
+  }, [messagesUpdate]);
   const getAdressFromLocation = async () => {
     try {
       const latitude = location.latitude;
@@ -419,7 +434,9 @@ export default function MessageScreen({ route, navigation }) {
     const unsubscribe = onSnapshot(
       query(collection(db, "chatRooms", chatId, "messages"), orderBy("timestamp", "asc")),
       (snapshot) => {
-        setMessagesData(snapshot.docs.map((doc) => ({ ...doc.data() })));
+        setMessagesData(
+          snapshot.docs.map((doc) => ({ docId: doc.id, parentId: doc.ref.parent.parent.id, ...doc.data() }))
+        );
         scrollToEnd();
         setMessagesDataLoading(false);
       }
@@ -560,7 +577,7 @@ export default function MessageScreen({ route, navigation }) {
             onContentSizeChange={scrollToEnd}
             ref={flatList}
             data={messagesData}
-            renderItem={({ item }) => <Message item={item}></Message>}
+            renderItem={({ item }) => <Message setMessageUpdate={setMessageUpdate} item={item}></Message>}
             keyExtractor={(item, index) => index}
           ></MessagesFlatList>
         )}
@@ -575,7 +592,7 @@ export default function MessageScreen({ route, navigation }) {
             value={messageText}
             onChangeText={setMessageText}
           ></MessageInput>
-          <IconSend onPress={() => sendMessage(messageText)}>
+          <IconSend onPress={() => (messagesUpdate ? updateMessage() : sendMessage(messageText))}>
             <FontAwesome name="send" size={20} color={colors.MessageScreenGoBackIconColor} />
           </IconSend>
         </InputBlock>

@@ -134,25 +134,30 @@ export default function Profile({ setModalChangeNikname, userData }) {
   };
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 4],
-      quality: 1,
-    });
-    if (result) {
-      const uriForStorage = result.assets[0].uri;
-      const fileName = result.assets[0].uri.split("/").pop();
-      const fileData = new FormData();
-      fileData.append("file", {
-        uri: uriForStorage,
-        name: fileName,
-        type: "image/png",
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [4, 4],
+        quality: 1,
       });
-      setNewPhotoURL(uriForStorage);
-      const { responseUrl, public_id } = await uploadImageToStore(uriForStorage, fileName);
 
-      updateWithNewPhotoUrl(responseUrl, public_id);
+      if (!result.canceled) {
+        const uriForStorage = result.assets[0].uri;
+        const fileName = result.assets[0].uri.split("/").pop();
+        const fileData = new FormData();
+        fileData.append("file", {
+          uri: uriForStorage,
+          name: fileName,
+          type: "image/png",
+        });
+        setNewPhotoURL(uriForStorage);
+        const { responseUrl, public_id } = await uploadImageToStore(uriForStorage, fileName);
+
+        updateWithNewPhotoUrl(responseUrl, public_id);
+      }
+    } catch (error) {
+      console.log("pickImage", error.message);
     }
   };
   const deleteFileFromStorage = async () => {

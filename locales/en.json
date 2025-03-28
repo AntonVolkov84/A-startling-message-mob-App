@@ -3,6 +3,7 @@
   "Cancel": "Cancel",
   "Loading": "Loading...",
   "Delete": "Delete",
+  "Update": "Update",
   "AddCompanionTitle": "Add companion",
   "AddCompanionPhoneFormat": "Phone format: + 'country code' 'phone number'",
   "AddCompanionPlaceholder": "Type phone for search",
