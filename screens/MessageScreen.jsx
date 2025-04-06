@@ -7,6 +7,8 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import Message from "../components/Message.jsx";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import axios from "axios";
+import moment from "moment-timezone";
+import tzlookup from "tz-lookup";
 import {
   addDoc,
   collection,
@@ -289,6 +291,9 @@ export default function MessageScreen({ route, navigation }) {
       }
       const snapshots = await Promise.all(promises);
       const matchingDocs = [];
+      const timezone = tzlookup(latitude, longitude);
+      const currentTime = moment().tz(timezone);
+      const currentHour = currentTime.hour();
       for (const snap of snapshots) {
         for (const doc of snap.docs) {
           const lat = doc.get("location").lat;
@@ -296,7 +301,12 @@ export default function MessageScreen({ route, navigation }) {
           const distanceInKm = geofire.distanceBetween([lat, lng], center);
           const distanceInM = distanceInKm * 1000;
           if (distanceInM <= radiusInM) {
-            matchingDocs.push(doc.id);
+            const startWorkingTime = parseInt(doc.get("startWorkingTime"), 10);
+            const endWorkingTime = parseInt(doc.get("endWorkingTime"), 10);
+            console.log(timezone, currentTime, currentHour, startWorkingTime, endWorkingTime);
+            if (currentHour >= startWorkingTime && currentHour < endWorkingTime) {
+              matchingDocs.push(doc.id);
+            }
           }
         }
       }
