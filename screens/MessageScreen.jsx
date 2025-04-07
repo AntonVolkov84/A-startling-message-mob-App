@@ -303,7 +303,6 @@ export default function MessageScreen({ route, navigation }) {
           if (distanceInM <= radiusInM) {
             const startWorkingTime = parseInt(doc.get("startWorkingTime"), 10);
             const endWorkingTime = parseInt(doc.get("endWorkingTime"), 10);
-            console.log(timezone, currentTime, currentHour, startWorkingTime, endWorkingTime);
             if (currentHour >= startWorkingTime && currentHour < endWorkingTime) {
               matchingDocs.push(doc.id);
             }
@@ -416,6 +415,7 @@ export default function MessageScreen({ route, navigation }) {
   };
   const sendMessage = async (messageText, codeForGift) => {
     checkReceiverIncludeCompanion();
+    setMessageText("");
     try {
       let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
       const text = codeForGift ? `${messageText} ${codeForGift}` : messageText;
@@ -430,7 +430,6 @@ export default function MessageScreen({ route, navigation }) {
       };
       await addDoc(collection(db, "chatRooms", chatId, "messages"), data);
       sendPushNotification(receiverExpoPushToken, messageText);
-      setMessageText("");
     } catch (error) {
       console.log("sendMessage", error.message);
     }
