@@ -205,15 +205,33 @@ export default function MessageScreen({ route, navigation }) {
   const checkUserAmount = async (price) => {
     try {
       const q = await getDoc(doc(db, "users", currentUserEmail));
-      const amount = (await q.data().userAccount) || 0;
+      const amount = await q.data().userAccount;
+      console.log(amount);
       if (amount - price < 0) {
         setGiftScreen(false);
         setLocation(null);
         return false;
       } else {
-        // Серверный запрос на изменение счета
-        console.log("server", price);
-        return true;
+        const user = auth.currentUser;
+        if (user) {
+          const idToken = await user.getIdToken();
+          const response = await fetch("https://stroymonitoring.info/funds/writeoff", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({
+              email: currentUserEmail,
+              price: price,
+            }),
+          });
+          if (response.status === 200) {
+            return true;
+          } else {
+            return false;
+          }
+        }
       }
     } catch (error) {
       console.log("checkUserAmount", error.message);
@@ -221,6 +239,7 @@ export default function MessageScreen({ route, navigation }) {
   };
   const sendGift = async (item) => {
     const code = rendomCode();
+    setGiftScreen(false);
     const hasEnoughMoney = await checkUserAmount(item.productPrice);
     if (!hasEnoughMoney) {
       return Alert.alert(`${t("MessageScreenAlertInsufficient")}`);
@@ -236,7 +255,6 @@ export default function MessageScreen({ route, navigation }) {
     sendEmailToCustomer(item.parentdocId, messageForCustomer);
     sendSMSTelegramm(item.parentdocId, messageForCustomer);
     sendMessage(item.selectedEmoji, code);
-    setGiftScreen(false);
     setLocation(null);
   };
   const sendSMSTelegramm = async (email, messageForCustomer) => {
