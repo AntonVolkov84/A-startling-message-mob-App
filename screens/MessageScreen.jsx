@@ -1,4 +1,4 @@
-import { Keyboard, View, Text, TouchableOpacity, FlatList } from "react-native";
+import { Keyboard, View, Text, TouchableOpacity, FlatList, Alert } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import * as colors from "../variables/colors.js";
@@ -202,11 +202,30 @@ export default function MessageScreen({ route, navigation }) {
       console.log("getAdressFromLocation", error.message);
     }
   };
-
+  const checkUserAmount = async (price) => {
+    try {
+      const q = await getDoc(doc(db, "users", currentUserEmail));
+      const amount = (await q.data().userAccount) || 0;
+      if (amount - price < 0) {
+        setGiftScreen(false);
+        setLocation(null);
+        return false;
+      } else {
+        // Серверный запрос на изменение счета
+        console.log("server", price);
+        return true;
+      }
+    } catch (error) {
+      console.log("checkUserAmount", error.message);
+    }
+  };
   const sendGift = async (item) => {
     const code = rendomCode();
+    const hasEnoughMoney = await checkUserAmount(item.productPrice);
+    if (!hasEnoughMoney) {
+      return Alert.alert(`${t("MessageScreenAlertInsufficient")}`);
+    }
     const address = await getAdressFromLocation();
-    console.log(address);
     const messageForCustomer = `Some one choose your product for gift to ${receiverPhone}. 
     Product: ${item.productName}, product quantity: ${item.productQuantity}, product price: ${item.productPrice}. 
     Receiver may have code for gift: ${code}. Last address of receiver ${address}. Thank you for your cooperation! 

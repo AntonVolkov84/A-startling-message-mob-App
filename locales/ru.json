@@ -27,5 +27,6 @@
   "MessageScreenModalGiftTitle": "Возможные подарки",
   "MessageScreenModalGiftExpire": "Пожалуйста, поприветствуйте вашего собеседника. Список подарков формируется из магазинов в округе него, исходя из геолокаци последнего сообщения. Не позднее 5 минут",
   "MessageScreenModalGiftNoCustomers": "Нет доступных подарков",
+  "MessageScreenAlertInsufficient": "Недостаточно средств на счету",
   "DashboardDelCompanionInfo": "Вы действительно хотите удалить этого собеседника?"
 }
