@@ -206,7 +206,6 @@ export default function MessageScreen({ route, navigation }) {
     try {
       const q = await getDoc(doc(db, "users", currentUserEmail));
       const amount = await q.data().userAccount;
-      console.log(amount);
       if (amount - price < 0) {
         setGiftScreen(false);
         setLocation(null);
@@ -253,6 +252,14 @@ export default function MessageScreen({ route, navigation }) {
     Продукт: ${item.productName}, количество продукта: ${item.productQuantity}, цена: ${item.productPrice}. 
     У получателя должен быть код: ${code}. Последнее местоположение получателя ${address}. Спасибо за сотрудничество!`;
     sendEmailToCustomer(item.parentdocId, messageForCustomer);
+    const dataForLog = {
+      salesEmail: item.parentdocId,
+      salesProductName: item.productName,
+      salesProductQuantity: item.productQuantity,
+      salesProductPrice: item.productPrice,
+      receiverPhone: receiverPhone,
+    };
+    makeLog(dataForLog);
     sendSMSTelegramm(item.parentdocId, messageForCustomer);
     sendMessage(item.selectedEmoji, code);
     setLocation(null);
@@ -282,6 +289,13 @@ export default function MessageScreen({ route, navigation }) {
     } catch (error) {
       console.error("Error occurred while sending message:", error.message);
       setError("Произошла ошибка при отправке сообщения.");
+    }
+  };
+  const makeLog = async (dataForLog) => {
+    try {
+      await axios.post(`https://stroymonitoring.info/log-purchase`, dataForLog);
+    } catch (error) {
+      console.log("makeLog", error.message);
     }
   };
   const sendEmailToCustomer = async (toEmail, messageForCustomer) => {
