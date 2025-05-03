@@ -166,6 +166,7 @@ export default function MessageScreen({ route, navigation }) {
   const receiverEmail = item.email;
   const receiverPhone = item.phoneNumber;
   const flatList = useRef(null);
+  const isScrolledToBottom = useRef(true);
   const currentUserUID = auth.currentUser.uid;
 
   const updateMessage = async () => {
@@ -274,7 +275,7 @@ export default function MessageScreen({ route, navigation }) {
       return;
     }
     try {
-      const response = await axios.post(
+      await axios.post(
         `${TELEGRAM_API_URL}/sendMessage`,
         {
           chat_id: telegramm,
@@ -317,7 +318,7 @@ export default function MessageScreen({ route, navigation }) {
     };
 
     try {
-      const response = await fetch(url, {
+      await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -389,11 +390,6 @@ export default function MessageScreen({ route, navigation }) {
       }
     });
     return foundChatId;
-  };
-  const scrollToEnd = () => {
-    if (flatList.current) {
-      flatList.current.scrollToEnd({ animated: true });
-    }
   };
   useEffect(() => {
     const initializeChat = async () => {
@@ -492,12 +488,11 @@ export default function MessageScreen({ route, navigation }) {
     }
     markMessagesAsRead(chatId);
     const unsubscribe = onSnapshot(
-      query(collection(db, "chatRooms", chatId, "messages"), orderBy("timestamp", "asc")),
+      query(collection(db, "chatRooms", chatId, "messages"), orderBy("timestamp", "desc")),
       (snapshot) => {
         setMessagesData(
           snapshot.docs.map((doc) => ({ docId: doc.id, parentId: doc.ref.parent.parent.id, ...doc.data() }))
         );
-        scrollToEnd();
         setMessagesDataLoading(false);
       }
     );
@@ -561,6 +556,11 @@ export default function MessageScreen({ route, navigation }) {
     setGiftData(arrayOfProducts);
     setGiftDataLoaded(true);
   };
+  useEffect(() => {
+    if (isScrolledToBottom.current && flatList.current) {
+      flatList.current.scrollToOffset({ offset: 0, animated: true });
+    }
+  }, [messagesData]);
 
   return (
     <LinearGradient
@@ -633,8 +633,13 @@ export default function MessageScreen({ route, navigation }) {
           <MessagesFlatList></MessagesFlatList>
         ) : (
           <MessagesFlatList
-            onScroll={() => Keyboard.dismiss()}
-            onContentSizeChange={scrollToEnd}
+            inverted
+            onScroll={(event) => {
+              Keyboard.dismiss();
+              const offsetY = event.nativeEvent.contentOffset.y;
+              isScrolledToBottom.current = offsetY < 100;
+            }}
+            scrollEventThrottle={16}
             ref={flatList}
             data={messagesData}
             renderItem={({ item }) => <Message setMessageUpdate={setMessageUpdate} item={item}></Message>}
