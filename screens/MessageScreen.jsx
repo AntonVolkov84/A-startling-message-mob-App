@@ -151,6 +151,7 @@ export default function MessageScreen({ route, navigation }) {
   const [messagesData, setMessagesData] = useState(null);
   const [messagesDataLoading, setMessagesDataLoading] = useState(true);
   const [messagesUpdate, setMessageUpdate] = useState("");
+  const [authorsData, setAuthorsData] = useState({});
   const [giftScreen, setGiftScreen] = useState(false);
   const [giftData, setGiftData] = useState(null);
   const [giftDataLoaded, setGiftDataLoaded] = useState(false);
@@ -168,6 +169,27 @@ export default function MessageScreen({ route, navigation }) {
   const flatList = useRef(null);
   const isScrolledToBottom = useRef(true);
   const currentUserUID = auth.currentUser.uid;
+
+  useEffect(() => {
+    const uniqueEmails = [currentUserEmail, receiverEmail];
+    const unsubscribes = [];
+    uniqueEmails.forEach((email) => {
+      const unsub = onSnapshot(doc(db, "users", email), (snapshot) => {
+        const data = snapshot.data();
+        const isAuthorCurrentUser = currentUserEmail === data.email;
+        setAuthorsData((prev) => ({
+          ...prev,
+          [email]: {
+            ...data,
+            isAuthorCurrentUser,
+          },
+        }));
+      });
+      unsubscribes.push(unsub);
+    });
+
+    return () => unsubscribes.forEach((unsub) => unsub());
+  }, [messagesData]);
 
   const updateMessage = async () => {
     try {
@@ -266,27 +288,11 @@ export default function MessageScreen({ route, navigation }) {
     setLocation(null);
   };
   const sendSMSTelegramm = async (email, messageForCustomer) => {
-    const TELEGRAM_API_KEY = process.env.EXPO_PUBLIC_TELEGRAMM_AUTH_TOKEN;
-    const TELEGRAM_API_URL = `https://api.telegram.org/bot${TELEGRAM_API_KEY}`;
-    const q = await getDoc(doc(db, "customers", email));
-    const telegramm = await q.data().telegrammChatId;
-    if (!telegramm) {
-      setError("Chat ID не найден. Пожалуйста, сначала проверьте Chat ID.");
-      return;
-    }
     try {
-      await axios.post(
-        `${TELEGRAM_API_URL}/sendMessage`,
-        {
-          chat_id: telegramm,
-          text: messageForCustomer,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      await axios.post("https://stroymonitoring.info/notify/telegram", {
+        email: email,
+        message: messageForCustomer,
+      });
     } catch (error) {
       console.error("Error occurred while sending message:", error.message);
       setError("Произошла ошибка при отправке сообщения.");
@@ -300,31 +306,10 @@ export default function MessageScreen({ route, navigation }) {
     }
   };
   const sendEmailToCustomer = async (toEmail, messageForCustomer) => {
-    const templateParams = {
-      to_email: toEmail,
-      subject: "New order from A Startling message",
-      message: messageForCustomer,
-    };
-    const serviceId = process.env.EXPO_PUBLIC_EMAILJS_SERVICE_ID;
-    const templateId = process.env.EXPO_PUBLIC_EMAILJS_TEMPLATE_ID;
-    const userId = process.env.EXPO_PUBLIC_EMAILJS_PUBLIC_KEY;
-    const apiKey = process.env.EXPO_PUBLIC_EMAILJS_API_KEY;
-    const url = `https://api.emailjs.com/api/v1.0/email/send`;
-    const payload = {
-      service_id: serviceId,
-      template_id: templateId,
-      user_id: userId,
-      template_params: templateParams,
-    };
-
     try {
-      await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(payload),
+      await axios.post("https://stroymonitoring.info/notify/email", {
+        toEmail,
+        messageForCustomer,
       });
     } catch (error) {
       console.log("sendEmailToCustomer", error.message);
@@ -378,18 +363,22 @@ export default function MessageScreen({ route, navigation }) {
   }, []);
 
   const findChat = async () => {
-    const chatQuery = await getDocs(
-      query(collection(db, "chatRoomsParticipants"), where("participants", "array-contains", currentUserEmail))
-    );
-    let foundChatId = null;
-    chatQuery.forEach((doc) => {
-      const data = doc.data();
-      if (data.participants.includes(receiverEmail)) {
-        foundChatId = doc.id;
-        setChatId(doc.id);
-      }
-    });
-    return foundChatId;
+    try {
+      const chatQuery = await getDocs(
+        query(collection(db, "chatRoomsParticipants"), where("participants", "array-contains", currentUserEmail))
+      );
+      let foundChatId = null;
+      chatQuery.forEach((doc) => {
+        const data = doc.data();
+        if (data.participants.includes(receiverEmail)) {
+          foundChatId = doc.id;
+          setChatId(doc.id);
+        }
+      });
+      return foundChatId;
+    } catch (error) {
+      console.log("findChat", error.message);
+    }
   };
   useEffect(() => {
     const initializeChat = async () => {
@@ -642,7 +631,9 @@ export default function MessageScreen({ route, navigation }) {
             scrollEventThrottle={16}
             ref={flatList}
             data={messagesData}
-            renderItem={({ item }) => <Message setMessageUpdate={setMessageUpdate} item={item}></Message>}
+            renderItem={({ item }) => (
+              <Message userData={authorsData[item.autor]} setMessageUpdate={setMessageUpdate} item={item}></Message>
+            )}
             keyExtractor={(item, index) => index}
           ></MessagesFlatList>
         )}

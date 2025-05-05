@@ -2,7 +2,7 @@ import { View, Text, Image, TouchableOpacity } from "react-native";
 import React, { useState, useEffect, memo } from "react";
 import styled from "styled-components";
 import * as colors from "../variables/colors.js";
-import { doc, onSnapshot, deleteDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, deleteDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig.js";
 import { getAuth } from "firebase/auth";
 import { useTranslation } from "react-i18next";
@@ -68,27 +68,12 @@ const ModalBtnText = styled.Text`
   color: white;
 `;
 
-export default memo(function Message({ item, setMessageUpdate }) {
-  const [userData, setUserData] = useState(null);
-  const [isAuthorCurrentUser, setIsAythorCurrentUser] = useState(false);
+export default memo(function Message({ item, setMessageUpdate, userData }) {
   const [changeMessage, setChangeMessage] = useState(false);
   const auth = getAuth();
-  const autorEmail = item.autor;
-  const currentUserEmail = auth.currentUser.email;
   const { t } = useTranslation();
+  const isAuthorCurrentUser = userData.isAuthorCurrentUser;
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(doc(db, "users", autorEmail), (snapshot) => {
-      setUserData(snapshot.data());
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (currentUserEmail === autorEmail) {
-      setIsAythorCurrentUser(true);
-    }
-  }, []);
   const deleteMessage = async () => {
     try {
       await deleteDoc(doc(db, "chatRooms", item.parentId, "messages", item.docId));
@@ -98,64 +83,60 @@ export default memo(function Message({ item, setMessageUpdate }) {
   };
   return (
     <>
-      {userData ? (
-        <>
-          {changeMessage && isAuthorCurrentUser ? (
-            <Modal>
-              <ModalBtn onPress={() => setChangeMessage(false)}>
-                <ModalBtnText>{t("Cancel")}</ModalBtnText>
-              </ModalBtn>
-              <ModalBtn
-                onPress={() => {
-                  setMessageUpdate({
-                    messageText: item.text,
-                    parentId: item.parentId,
-                    docId: item.docId,
-                  });
-                  setChangeMessage(false);
-                }}
-              >
-                <ModalBtnText>{t("Update")}</ModalBtnText>
-              </ModalBtn>
-              <ModalBtn>
-                <ModalBtnText
-                  onPress={() => {
-                    deleteMessage();
-                    setChangeMessage(false);
-                  }}
-                >
-                  {t("Delete")}
-                </ModalBtnText>
-              </ModalBtn>
-            </Modal>
-          ) : (
-            <BlockMessage
-              onLongPress={() => setChangeMessage(true)}
-              style={{
-                paddingLeft: isAuthorCurrentUser ? 15 : 5,
-                backgroundColor: isAuthorCurrentUser
-                  ? colors.MessageBackgroundColorWithAuthor
-                  : colors.MessageBackgroundColor,
-                borderRadius: 5,
-                flexDirection: isAuthorCurrentUser ? "row-reverse" : "row",
-                marginLeft: isAuthorCurrentUser ? "30%" : "0",
+      {changeMessage && isAuthorCurrentUser ? (
+        <Modal>
+          <ModalBtn onPress={() => setChangeMessage(false)}>
+            <ModalBtnText>{t("Cancel")}</ModalBtnText>
+          </ModalBtn>
+          <ModalBtn
+            onPress={() => {
+              setMessageUpdate({
+                messageText: item.text,
+                parentId: item.parentId,
+                docId: item.docId,
+              });
+              setChangeMessage(false);
+            }}
+          >
+            <ModalBtnText>{t("Update")}</ModalBtnText>
+          </ModalBtn>
+          <ModalBtn>
+            <ModalBtnText
+              onPress={() => {
+                deleteMessage();
+                setChangeMessage(false);
               }}
             >
-              <BlockAutor>
-                <MessageAvatarBlock
-                  source={{
-                    uri: userData.photoUrl,
-                  }}
-                ></MessageAvatarBlock>
-                <MessageNameBlockText numberOfLines={1}>{userData.nikname}</MessageNameBlockText>
-              </BlockAutor>
-              <BoxForMessage>
-                <BoxForMessageText>{item.text}</BoxForMessageText>
-              </BoxForMessage>
-            </BlockMessage>
-          )}
-        </>
-      ) : null}
+              {t("Delete")}
+            </ModalBtnText>
+          </ModalBtn>
+        </Modal>
+      ) : (
+        <BlockMessage
+          onLongPress={() => setChangeMessage(true)}
+          style={{
+            paddingLeft: isAuthorCurrentUser ? 15 : 5,
+            backgroundColor: isAuthorCurrentUser
+              ? colors.MessageBackgroundColorWithAuthor
+              : colors.MessageBackgroundColor,
+            borderRadius: 5,
+            flexDirection: isAuthorCurrentUser ? "row-reverse" : "row",
+            marginLeft: isAuthorCurrentUser ? "30%" : "0",
+          }}
+        >
+          <BlockAutor>
+            <MessageAvatarBlock
+              source={{
+                uri: userData.photoUrl,
+              }}
+            ></MessageAvatarBlock>
+            <MessageNameBlockText numberOfLines={1}>{userData.nikname}</MessageNameBlockText>
+          </BlockAutor>
+          <BoxForMessage>
+            <BoxForMessageText style={{ marginRight: isAuthorCurrentUser ? 0 : 10 }}>{item.text}</BoxForMessageText>
+          </BoxForMessage>
+        </BlockMessage>
+      )}
     </>
   );
 });
