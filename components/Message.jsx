@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 const BlockMessage = styled.TouchableOpacity`
   width: 70%;
   height: fit-content;
-  padding-top: 5px;
   padding-right: 5px;
   border-radius: 5px;
   flex-direction: row;
@@ -19,6 +18,7 @@ const BlockMessage = styled.TouchableOpacity`
 const BlockAutor = styled.View`
   justify-content: center;
   align-items: center;
+  padding-top: 5px;
 `;
 const MessageAvatarBlock = styled.Image`
   height: 40px;

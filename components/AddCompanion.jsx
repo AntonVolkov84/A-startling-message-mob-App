@@ -70,15 +70,18 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
     return regex.test(checkedPhone);
   };
   const alreadyAddedPhone = async () => {
+    const addedPhone = phone;
+    setPhone("");
+    console.log(addedPhone);
     try {
       const q = query(
         collection(db, "companions", currentUserEmail, "personal_companions"),
-        where("phoneNumber", "==", phone),
+        where("phoneNumber", "==", addedPhone),
         limit(1)
       );
       const querySnapshot = await getDocs(q);
       if (querySnapshot.empty) {
-        checkUser();
+        checkUser(addedPhone);
       } else if (!querySnapshot.empty) {
         Alert.alert(`${t("AddCompanionoAlreadyExistsAlert")}`);
         return true;
@@ -127,14 +130,13 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
       console.log("createChatRoom", error.message);
     }
   };
-  const checkUser = async () => {
-    if (!checkPhoneNumber()) {
+  const checkUser = async (addedPhone) => {
+    if (!checkPhoneNumber(addedPhone)) {
       return;
     }
     try {
-      const q = query(collection(db, "users"), where("phoneNumber", "==", phone), limit(1));
+      const q = query(collection(db, "users"), where("phoneNumber", "==", addedPhone), limit(1));
       const querySnapshot = await getDocs(q);
-
       if (querySnapshot.empty) {
         return Alert.alert(`${t("AddCompanionoUserAlert")}`);
       }
@@ -152,18 +154,17 @@ export default function AddCompanion({ userData, setModalAddCompanion }) {
         Alert.alert(`${t("AddCompanionAddCompanionAlert")}`);
         await createChatRoomParticipants(receiverEmail);
         await receiverCheckAddedPhone(receiverEmail);
-        setPhone("");
         setModalAddCompanion(false);
       }
     } catch (error) {
       console.log("checkUser", error.message);
     }
   };
-  const checkPhoneNumber = () => {
-    if (phone === userData.phoneNumber) {
+  const checkPhoneNumber = (addedPhone = phone) => {
+    if (addedPhone === userData.phoneNumber) {
       return Alert.alert(`${t("AddCompanionYourNumberAlert")}`);
     } else {
-      if (!isPhone(phone)) {
+      if (!isPhone(addedPhone)) {
         return Alert.alert(`${t("AddCompanionIsPhoneAlert")}`);
       } else {
         return true;
